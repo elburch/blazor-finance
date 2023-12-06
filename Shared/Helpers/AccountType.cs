@@ -1,0 +1,39 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BlazorFinance.Shared.Helpers
+{
+    public enum AccountType
+    {
+        [Display(Name ="None")]
+        None,
+        [Display(Name = "Cash")]
+        Cash,
+        [Display(Name = "Savings")]
+        Savings,
+        [Display(Name = "Discount")]
+        Discount,
+        [Display(Name = "Education")]
+        Education,
+        [Display(Name = "Full Service")]
+        FullService,
+        [Display(Name = "Margin")]
+        Margin,
+        [Display(Name = "Option")]
+        Option,
+        [Display(Name = "Robo-Advisor")]
+        RoboAdvisor,
+        [Display(Name = "Roth IRA")]
+        RothIRA,
+        [Display(Name = "Traditional IRA")]
+        TraditionalIRA,
+        [Display(Name = "Roth 401K")]
+        Roth401K,
+        [Display(Name = "Traditional 401K")]
+        Traditional401K
+    }
+}

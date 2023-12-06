@@ -1,0 +1,66 @@
+﻿@page "/institutions"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Helpers
+@inject HttpClient Http
+
+<h3>Institutions</h3>
+
+<DataGrid TItem="Institution"
+          Data="@InstitutionList"
+          @bind-SelectedRow="@SelectedInstitution"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          Editable
+          Responsive>
+    <DataGridColumns>
+         <DataGridCommandColumn>
+             <NewCommandTemplate>
+                 <Button Color="Color.Success" PreventDefaultOnSubmit Clicked="@context.Clicked">New</Button>
+             </NewCommandTemplate>
+             <EditCommandTemplate>
+                 <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+             </EditCommandTemplate>
+            <DeleteCommandTemplate>
+                 <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
+            </DeleteCommandTemplate>
+         </DataGridCommandColumn>
+         <DataGridColumn Field="@nameof(Institution.Id)" Caption="#" Sortable="false" />
+         <DataGridSelectColumn 
+             Field="@nameof(Institution.Type)" 
+             Caption="Type"  
+             Data="InstitutionTypes.Cast<object>()" 
+             ValueField="(x) => (InstitutionType)x"
+             TextField="(x) => Enum.GetName(typeof(InstitutionType), (InstitutionType)x)"
+             Editable
+         >
+         </DataGridSelectColumn>
+         <DataGridColumn Field="@nameof(Institution.Name)" Caption="Name" Editable />
+         <DataGridColumn Field="@nameof(Institution.SteetAddress)" Caption="Address" Editable />
+         <DataGridColumn Field="@nameof(Institution.City)" Caption="City" Editable />
+         <DataGridColumn Field="@nameof(Institution.State)" Caption="State" Editable />
+         <DataGridColumn Field="@nameof(Institution.PostalNumber)" Caption="Zip" Editable />
+         <DataGridColumn Field="@nameof(Institution.Website)" Caption="Website" Editable />
+         <DataGridColumn Field="@nameof(Institution.PhoneNumber)" Caption="Phone" Editable />
+    </DataGridColumns>
+</DataGrid>
+
+ @code {
+    private List<Institution> InstitutionList = new List<Institution>();
+    private Array InstitutionTypes = Enum.GetValues(typeof(InstitutionType));
+    private Institution SelectedInstitution = new Institution();
+
+    protected override async Task OnInitializedAsync()
+    {
+        InstitutionList = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<Institution, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("institution/insert", e.NewItem);
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<Institution, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PutAsJsonAsync("institution/update", e.NewItem);
+    }
+}
