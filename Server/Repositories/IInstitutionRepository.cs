@@ -6,10 +6,12 @@ namespace BlazorFinance.Server.Repositories
 {
     public interface IInstitutionRepository
     {
-        public Task<List<Institution>> GetInstitutionListAsync();
+        public Task<BsonValue> CreateInstitutionAsync(Institution institution);
 
-        public Task<BsonValue> InsertInstitutionAsync(Institution institution);
+        public Task<List<Institution>> ReadInstitutionListAsync();
 
         public Task<bool> UpdateInstitutionAsync(Institution institution);
+
+        public Task<bool> DeleteInstitutionAsync(BsonValue id);
     }
 }

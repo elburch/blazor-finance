@@ -1,3 +1,4 @@
+using Blazored.Toast;
 using BlazorFinance.Client;
 using Blazorise;
 using Blazorise.Bootstrap;
@@ -10,13 +11,13 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+builder.Services.AddBlazoredToast();
 builder.Services.AddBlazorise(options => 
     { 
         options.Immediate = true; 
     })
     .AddBootstrapProviders()
     .AddFontAwesomeIcons();
-
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 await builder.Build().RunAsync();

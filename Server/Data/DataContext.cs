@@ -26,7 +26,24 @@ namespace BlazorFinance.Server.Data
             }
         }
 
-        public async Task<List<TEntity>> Get()
+        public async Task<BsonValue> Create(TEntity entity)
+        {
+            try
+            {
+                using LiteDatabase db = new LiteDatabase(_dbpath);
+                return await Task.Run(() => db
+                        .GetCollection<TEntity>()
+                        .Insert(entity));
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(
+                    $"An exception occurred while attempting to insert the new {nameof(TEntity)} record.  Message: {ex.Message}"
+                );
+            }
+        }
+
+        public async Task<List<TEntity>> Read()
         {
             try
             {
@@ -45,7 +62,7 @@ namespace BlazorFinance.Server.Data
             }
         }
 
-        public async Task<TEntity> Get(int Id)
+        public async Task<TEntity> Read(int Id)
         {
             try
             {
@@ -61,21 +78,6 @@ namespace BlazorFinance.Server.Data
             {
                 throw new ApplicationException(
                     $"An exception occurred while attempting to get {nameof(TEntity)} record {Id}.  Message: {ex.Message}"
-                );
-            }
-        }
-
-        public async Task<BsonValue> Insert(TEntity entity)
-        {
-            try {
-                using LiteDatabase db = new LiteDatabase(_dbpath);
-                return await Task.Run(() => db
-                        .GetCollection<TEntity>()
-                        .Insert(entity));
-            }
-            catch (Exception ex) {
-                throw new ApplicationException(
-                    $"An exception occurred while attempting to insert the new {nameof(TEntity)} record.  Message: {ex.Message}"
                 );
             }
         }
