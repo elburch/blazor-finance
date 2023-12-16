@@ -10,8 +10,10 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 // Data
+builder.Services.AddScoped<IDataContext<Account>, DataContext<Account>>();
 builder.Services.AddScoped<IDataContext<Institution>, DataContext<Institution>>();
 // Repositories
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 // Services
 builder.Services.AddScoped<IQuoteService, QuoteService>();

@@ -55,7 +55,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        InstitutionList = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
+        InstitutionList = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Institution, Dictionary<string, object>> e)
