@@ -6,57 +6,57 @@ namespace BlazorFinance.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class InstitutionController : Controller
+    public class AccountController : Controller
     {
-        private IInstitutionRepository _repository;
+        private IAccountRepository _repository;
 
-        public InstitutionController(IInstitutionRepository repository) 
+        public AccountController(IAccountRepository repository)
         {
             _repository = repository;
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateInstitution([Bind("Type","Name","SteetAddress","City","State","PostalNumber","Website","PhoneNumber")] Institution institution) 
+        public async Task<IActionResult> CreateAccount([Bind("Institution", "Type", "Name", "Number")] Account account)
         {
-            if (institution == null){
+            if (account == null) {
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            return await _repository.CreateInstitutionAsync(institution) > 0 
+            return await _repository.CreateAccountAsync(account) > 0
                 ? StatusCode(StatusCodes.Status201Created)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
         [HttpGet]
-        public async Task<List<Institution>> ReadInstitutionList()
+        public async Task<List<Account>> ReadAccountList()
         {
-            return await _repository.ReadInstitutionListAsync();
+            return await _repository.ReadAccountListAsync();
         }
 
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateInstitution([FromRoute] int id, Institution institution)
+        public async Task<IActionResult> UpdateAccount([FromRoute] int id, Account account)
         {
-            if (id != institution.Id){
+            if (id != account.Id){
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            if (await _repository.ReadInstitutionAsync(id) == null){
+            if (await _repository.ReadAccountAsync(id) == null){
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            return await _repository.UpdateInstitutionAsync(institution) == true
+            return await _repository.UpdateAccountAsync(account) == true
                 ? StatusCode(StatusCodes.Status200OK)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteInstitution([FromRoute] int id)
+        public async Task<IActionResult> DeleteAccount([FromRoute] int id)
         {
-            if (await _repository.ReadInstitutionAsync(id) == null){
+            if (await _repository.ReadAccountAsync(id) == null){
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            return await _repository.DeleteInstitutionAsync(id) == true
+            return await _repository.DeleteAccountAsync(id) == true
                 ? StatusCode(StatusCodes.Status200OK)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }

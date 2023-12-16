@@ -1,5 +1,6 @@
 ﻿using BlazorFinance.Shared.Entities;
 using LiteDB;
+using System.Linq.Expressions;
 
 namespace BlazorFinance.Server.Data
 {
@@ -32,13 +33,33 @@ namespace BlazorFinance.Server.Data
             {
                 using LiteDatabase db = new LiteDatabase(_dbpath);
                 return await Task.Run(() => db
-                        .GetCollection<TEntity>()
-                        .Insert(entity));
+                    .GetCollection<TEntity>()
+                    .Insert(entity));
             }
             catch (Exception ex)
             {
                 throw new ApplicationException(
                     $"An exception occurred while attempting to insert the new {nameof(TEntity)} record.  Message: {ex.Message}"
+                );
+            }
+        }
+
+        public async Task<TEntity> Read(int Id)
+        {
+            try
+            {
+                using LiteDatabase db = new LiteDatabase(_dbpath);
+                return await Task.Run(() => db
+                     .GetCollection<TEntity>()
+                     .Query()
+                     .Where(e => e.Id == Id)
+                     .FirstOrDefault()
+                 );
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(
+                    $"An exception occurred while attempting to get {nameof(TEntity)} record {Id}.  Message: {ex.Message}"
                 );
             }
         }
@@ -62,24 +83,42 @@ namespace BlazorFinance.Server.Data
             }
         }
 
-        public async Task<TEntity> Read(int Id)
+        /// <summary>
+        /// Use to include a where clause and related tables
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+        /// <exception cref="ApplicationException"></exception>
+        public async Task<List<TEntity>> Read(Expression<Func<TEntity, bool>> predicate, params string[] properties)
         {
+            List<TEntity> entities;
+
             try
             {
-                using LiteDatabase db = new LiteDatabase(_dbpath);
-                return await Task.Run(() => db
-                     .GetCollection<TEntity>()
-                     .Query()
-                     .Where(x => x.Id == Id)
-                     .FirstOrDefault()
-                 );
+                using (LiteDatabase db = new LiteDatabase(_dbpath))
+                {
+                    ILiteQueryable<TEntity> query = await Task.Run(() => db
+                        .GetCollection<TEntity>()
+                        .Query()
+                    );
+
+                    foreach (var property in properties)
+                        query = query.Include(property);
+
+                    entities = query
+                        .Where(predicate)
+                        .ToList();
+                }
             }
             catch (Exception ex)
             {
                 throw new ApplicationException(
-                    $"An exception occurred while attempting to get {nameof(TEntity)} record {Id}.  Message: {ex.Message}"
+                    $"An exception occurred while attempting to get {nameof(TEntity)} records.  Message: {ex.Message}"
                 );
             }
+
+            return entities;
         }
 
         public async Task<bool> Update(TEntity entity)
@@ -88,8 +127,8 @@ namespace BlazorFinance.Server.Data
             {
                 using LiteDatabase db = new LiteDatabase(_dbpath);
                 return await Task.Run(() => db
-                        .GetCollection<TEntity>()
-                        .Update(entity));
+                    .GetCollection<TEntity>()
+                    .Update(entity));
             }
             catch (Exception ex)
             {
@@ -105,8 +144,8 @@ namespace BlazorFinance.Server.Data
             {
                 using LiteDatabase db = new LiteDatabase(_dbpath);
                 return await Task.Run(() => db
-                        .GetCollection<TEntity>()
-                        .Delete(Id));
+                    .GetCollection<TEntity>()
+                    .Delete(Id));
             }
             catch (Exception ex)
             {
