@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlazorFinance.Shared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace BlazorFinance.Shared.Models
     {
         public int Id { get; set; }
 
-        public int AssetTypeId { get; set; }
+        public AssetType Type { get; set; }
 
         public string Name { get; set; } = string.Empty;
 

@@ -14,7 +14,7 @@ namespace BlazorFinance.Server.Repositories
         }
 
         /// <summary>
-        /// Returns a BsonValue representing the institution Id
+        /// Creates a new Institution object
         /// </summary>
         /// <param name="institution"></param>
         /// <returns>BsonValue</returns>
@@ -24,19 +24,39 @@ namespace BlazorFinance.Server.Repositories
         }
 
         /// <summary>
+        /// Reads a single Institution objects
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Institution</returns>
+        public async Task<Institution> ReadInstitutionAsync(int id)
+        {
+            return await _context.Read(id);
+        }
+
+        /// <summary>
         /// Reads a list of (all) Institution objects
         /// </summary>
-        /// <returns></returns>
+        /// <returns>List<Institution></returns>
         public async Task<List<Institution>> ReadInstitutionListAsync()
         {
             return await _context.Read();
         }
 
+        /// <summary>
+        /// Updates an existing Institution object
+        /// </summary>
+        /// <param name="institution"></param>
+        /// <returns>bool</returns>
         public async Task<bool> UpdateInstitutionAsync(Institution institution)
         {
             return await _context.Update(institution);
         }
 
+        /// <summary>
+        /// Deletes an Institution object
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>bool</returns>
         public async Task<bool> DeleteInstitutionAsync(BsonValue id)
         {
             return await _context.Delete(id);

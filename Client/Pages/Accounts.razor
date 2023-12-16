@@ -1,0 +1,96 @@
+﻿@page "/accounts"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Helpers
+@using System.Net
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
+
+<h3>Accounts</h3>
+
+<DataGrid TItem="Account"
+          Data="@AccountList"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          RowRemoving="@OnRowRemoving"
+          RowRemoved="@OnRowRemoved"
+          Editable="true"
+          ShowPager="true"
+          Responsive>
+    <DataGridColumns>
+        <DataGridCommandColumn>
+            <NewCommandTemplate>
+                <Button Color="Color.Success" PreventDefaultOnSubmit Clicked="@context.Clicked">New</Button>
+            </NewCommandTemplate>
+            <EditCommandTemplate>
+                 <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+            </EditCommandTemplate>
+            <DeleteCommandTemplate>
+                 <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
+            </DeleteCommandTemplate>
+        </DataGridCommandColumn>
+        <DataGridColumn Field="@nameof(Account.Id)" Caption="#" Sortable="false" />
+        <DataGridSelectColumn 
+            Field="@nameof(Account.Type)"
+            Caption="Type"
+            Data="Enum.GetValues(typeof(AccountType)).Cast<object>()"
+            ValueField="(x) => (AccountType)x"
+            TextField="(x) => Enum.GetName(typeof(AccountType), (AccountType)x)"
+            Editable
+        >
+        </DataGridSelectColumn>
+        <DataGridColumn Field="@nameof(Account.Name)" Caption="Name" Editable />
+        <DataGridColumn Field="@nameof(Account.Number)" Caption="Number" Editable />
+        <DataGridColumn Field="@nameof(Account.Institution.Name)" Caption="Institution" Editable />
+     </DataGridColumns>
+ </DataGrid>
+
+ @code {
+    private List<Account> AccountList = new List<Account>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountList = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<Account, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("account/create", e.NewItem);
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Account Created");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Account Was Not Created. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<Account, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PutAsJsonAsync($"account/update/{e.NewItem.Id}", e.NewItem,
+            new JsonSerializerOptions{
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            }
+        );
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Account Id {e.NewItem.Id} Updated");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Account Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowRemoving(CancellableRowChange<Account> e)
+    {
+        // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
+        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Account?");
+    }
+
+    private async Task OnRowRemoved(Account account)
+    {
+        HttpResponseMessage? response = await Http.DeleteAsync($"account/delete/{account.Id}");
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Account Id {account.Id} Deleted");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Account Id {account.Id} Was Not Deleted. Response Code: {response.StatusCode}");
+    }
+}
