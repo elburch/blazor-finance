@@ -10,7 +10,7 @@
 <h3>Accounts</h3>
 
 <DataGrid TItem="Account"
-          Data="@AccountList"
+          Data="@_accounts"
           RowInserted="@OnRowInserted"
           RowUpdated="@OnRowUpdated"
           RowRemoving="@OnRowRemoving"
@@ -21,10 +21,10 @@
     <DataGridColumns>
         <DataGridCommandColumn>
             <NewCommandTemplate>
-                <Button Color="Color.Success" PreventDefaultOnSubmit Clicked="@context.Clicked">New</Button>
+                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
             </NewCommandTemplate>
             <EditCommandTemplate>
-                 <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+                 <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
             </EditCommandTemplate>
             <DeleteCommandTemplate>
                  <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
@@ -37,29 +37,61 @@
             Data="Enum.GetValues(typeof(AccountType)).Cast<object>()"
             ValueField="(x) => (AccountType)x"
             TextField="(x) => Enum.GetName(typeof(AccountType), (AccountType)x)"
-            Editable
-        >
+            Editable="true">
+        </DataGridSelectColumn>
+        <DataGridSelectColumn 
+            Field="@nameof(Account.InstitutionId)"
+            Caption="Institution"
+            Data="@_institutions"
+            Editable="true">
+            <DisplayTemplate>
+                 @if(_institutions != null){
+                    @_institutions.Where(i => i.Id == (context as Account).InstitutionId).FirstOrDefault()?.Name;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select 
+                    TValue="int" 
+                    SelectedValue="@((int)( context.CellValue ))" 
+                    SelectedValueChanged="@(( v ) => context.CellValue = v)"
+                >
+                    @if (_institutions != null){
+                        foreach (var institution in _institutions){
+                            <SelectItem Value="@(institution.Id)">@(institution.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
         </DataGridSelectColumn>
         <DataGridColumn Field="@nameof(Account.Name)" Caption="Name" Editable />
         <DataGridColumn Field="@nameof(Account.Number)" Caption="Number" Editable />
-        <DataGridColumn Field="@nameof(Account.Institution.Name)" Caption="Institution" Editable />
      </DataGridColumns>
  </DataGrid>
 
  @code {
-    private List<Account> AccountList = new List<Account>();
+    private List<Account> _accounts = new List<Account>();
+    private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
-        AccountList = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
+        _institutions.Add(new Institution() { Id = 0, Name = "None" });
     }
 
     private async Task OnRowInserted(SavedRowItem<Account, Dictionary<string, object>> e)
     {
         HttpResponseMessage? response = await Http.PostAsJsonAsync("account/create", e.NewItem);
 
-        if (response.IsSuccessStatusCode)
-            ToastService.ShowToast(ToastLevel.Success, $"Account Created");
+        if (response.IsSuccessStatusCode){
+            Account? account = await response.Content.ReadFromJsonAsync<Account>();
+            if (account != null){
+                e.OldItem.Id = account.Id;
+            }
+            ToastService.ShowToast(ToastLevel.Success, $"Account Institution: Id {account?.InstitutionId}");
+            
+            ToastService.ShowToast(ToastLevel.Success, $"Account Created: Id {account?.Id}");
+        }
         else
             ToastService.ShowToast(ToastLevel.Error, $"Account Was Not Created. Response Code: {response.StatusCode}");
     }

@@ -1,5 +1,6 @@
 ﻿using BlazorFinance.Server.Repositories;
 using BlazorFinance.Shared.Entities;
+using LiteDB;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorFinance.Server.Controllers
@@ -23,7 +24,7 @@ namespace BlazorFinance.Server.Controllers
             }
 
             return await _repository.CreateInstitutionAsync(institution) > 0 
-                ? StatusCode(StatusCodes.Status201Created)
+                ? StatusCode(StatusCodes.Status201Created, institution)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 

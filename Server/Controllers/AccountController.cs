@@ -1,6 +1,8 @@
 ﻿using BlazorFinance.Server.Repositories;
 using BlazorFinance.Shared.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
+using System.Net;
 
 namespace BlazorFinance.Server.Controllers
 {
@@ -23,7 +25,7 @@ namespace BlazorFinance.Server.Controllers
             }
 
             return await _repository.CreateAccountAsync(account) > 0
-                ? StatusCode(StatusCodes.Status201Created)
+                ? StatusCode(StatusCodes.Status201Created, account)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
@@ -32,6 +34,17 @@ namespace BlazorFinance.Server.Controllers
         {
             return await _repository.ReadAccountListAsync();
         }
+
+        //[HttpGet]
+        //public async Task<List<Account>> ReadAccountList([FromQuery] string key, int value)
+        //{
+        //    ParameterExpression type = Expression.Parameter(typeof(Account), "t");
+        //    Expression member = Expression.Property(type, key);
+        //    ConstantExpression? constant= Expression.Constant(value, typeof(int));
+        //    Expression expression = Expression.Equal(member, constant);
+
+        //    return await _repository.ReadAccountListAsync(Expression.Lambda<Func<Account, bool>>(expression, type));
+        //}
 
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateAccount([FromRoute] int id, Account account)
@@ -45,7 +58,7 @@ namespace BlazorFinance.Server.Controllers
             }
 
             return await _repository.UpdateAccountAsync(account) == true
-                ? StatusCode(StatusCodes.Status200OK)
+                ? StatusCode(StatusCodes.Status200OK, account)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
