@@ -1,6 +1,7 @@
 ﻿using BlazorFinance.Server.Data;
 using BlazorFinance.Shared.Entities;
 using LiteDB;
+using System.Linq.Expressions;
 
 namespace BlazorFinance.Server.Repositories
 {
@@ -11,11 +12,6 @@ namespace BlazorFinance.Server.Repositories
         public AccountRepository(IDataContext<Account> context)
         {
             _context = context;
-
-            var mapper = BsonMapper.Global;
-
-            mapper.Entity<Account>()
-                .DbRef(x => x.Institution, "institution");
         }
 
         /// <summary>
@@ -39,12 +35,22 @@ namespace BlazorFinance.Server.Repositories
         }
 
         /// <summary>
+        /// Reads a list of Account objects matching predicate
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns>List<Account></returns>
+        public async Task<List<Account>> ReadAccountListAsync(Expression<Func<Account, bool>> predicate)
+        {
+            return await _context.Read(predicate);
+        }
+
+        /// <summary>
         /// Reads a list of (all) Account objects
         /// </summary>
         /// <returns>List<Account></returns>
         public async Task<List<Account>> ReadAccountListAsync()
         {
-            return await _context.Read(e => e.Institution != null, "Institution");
+            return await _context.Read();
         }
 
         /// <summary>

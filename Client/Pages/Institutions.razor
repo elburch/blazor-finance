@@ -10,7 +10,7 @@
 <h3>Institutions</h3>
 
 <DataGrid TItem="Institution"
-          Data="@InstitutionList"
+          Data="@_institutions"
           RowInserted="@OnRowInserted"
           RowUpdated="@OnRowUpdated"
           RowRemoving="@OnRowRemoving"
@@ -21,10 +21,10 @@
     <DataGridColumns>
          <DataGridCommandColumn>
              <NewCommandTemplate>
-                 <Button Color="Color.Success" PreventDefaultOnSubmit Clicked="@context.Clicked">New</Button>
+                 <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
              </NewCommandTemplate>
              <EditCommandTemplate>
-                 <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+                 <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
              </EditCommandTemplate>
             <DeleteCommandTemplate>
                  <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
@@ -51,19 +51,27 @@
 </DataGrid>
 
  @code {
-    private List<Institution> InstitutionList = new List<Institution>();
+    private List<Account> _accounts = new List<Account>();
+    private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
-        InstitutionList = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Institution, Dictionary<string, object>> e)
     {
         HttpResponseMessage? response = await Http.PostAsJsonAsync("institution/create", e.NewItem);
 
-        if (response.IsSuccessStatusCode)
-            ToastService.ShowToast(ToastLevel.Success, $"Institution Created");
+        if (response.IsSuccessStatusCode){
+            Institution? institution = await response.Content.ReadFromJsonAsync<Institution>();
+            if (institution != null){
+                e.OldItem.Id = institution.Id;
+            }
+
+            ToastService.ShowToast(ToastLevel.Success, $"Institution Created: Id {institution?.Id}");
+        }
         else
             ToastService.ShowToast(ToastLevel.Error, $"Institution Was Not Created. Response Code: {response.StatusCode}");
     }
@@ -84,8 +92,15 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Institution> e)
     {
-        // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
-        e.Cancel = ! await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Institution?");
+        // List<Account> accounts = await Http.GetFromJsonAsync<List<Account>>($"account?id={e.OldItem.Id}") ?? new List<Account>();
+        List<Account> accounts = _accounts
+            .Where(t => t.InstitutionId == e.OldItem.Id)
+            .ToList<Account>();
+
+        e.Cancel = accounts.Count > 0 
+            // Dialogs return true when confirming delete prompt, false when canceled (use negation to sync with args)
+            ? !await JSRuntime.InvokeAsync<bool>("alert", "Cannot delete Institutions having related Account records")
+            : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Institution?");
     }
 
     private async Task OnRowRemoved(Institution institution)
