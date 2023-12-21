@@ -70,11 +70,13 @@
 
  @code {
     private List<Account> _accounts = new List<Account>();
+    private List<Asset> _assets = new List<Asset>();
     private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>();
         _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
         _institutions.Add(new Institution() { Id = 0, Name = "None" });
     }
@@ -88,8 +90,7 @@
             if (account != null){
                 e.OldItem.Id = account.Id;
             }
-            ToastService.ShowToast(ToastLevel.Success, $"Account Institution: Id {account?.InstitutionId}");
-            
+
             ToastService.ShowToast(ToastLevel.Success, $"Account Created: Id {account?.Id}");
         }
         else
@@ -112,8 +113,14 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Account> e)
     {
-        // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
-        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Account?");
+        List<Asset> assets = _assets
+            .Where(t => t.AccountId == e.OldItem.Id)
+            .ToList<Asset>();
+
+        e.Cancel = assets.Count > 0
+            // Dialogs return true when confirming delete prompt, false when canceled (use negation to sync with args)
+            ? !await JSRuntime.InvokeAsync<bool>("alert", "Cannot delete Accounts having related Asset records")
+            : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Account?");
     }
 
     private async Task OnRowRemoved(Account account)
