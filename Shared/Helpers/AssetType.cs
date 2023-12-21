@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BlazorFinance.Shared.Enums
+namespace BlazorFinance.Shared.Helpers
 {
     public enum AssetType
     {

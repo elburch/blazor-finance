@@ -92,7 +92,6 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Institution> e)
     {
-        // List<Account> accounts = await Http.GetFromJsonAsync<List<Account>>($"account?id={e.OldItem.Id}") ?? new List<Account>();
         List<Account> accounts = _accounts
             .Where(t => t.InstitutionId == e.OldItem.Id)
             .ToList<Account>();

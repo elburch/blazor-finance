@@ -1,0 +1,131 @@
+﻿@page "/assets"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Helpers
+@using System.Net
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
+
+<h3>Assets</h3>
+
+<DataGrid TItem="Asset"
+          Data="@_assets"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          RowRemoving="@OnRowRemoving"
+          RowRemoved="@OnRowRemoved"
+          Editable="true"
+          ShowPager="true"
+          Responsive>
+    <DataGridColumns>
+        <DataGridCommandColumn>
+            <NewCommandTemplate>
+                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
+            </NewCommandTemplate>
+            <EditCommandTemplate>
+                <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
+            </EditCommandTemplate>
+            <DeleteCommandTemplate>
+                <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
+            </DeleteCommandTemplate>
+        </DataGridCommandColumn>
+        <DataGridColumn Field="@nameof(Asset.Id)" Caption="#" Sortable="false" />
+        <DataGridSelectColumn Field="@nameof(Asset.Type)"
+                              Caption="Type"
+                              Data="Enum.GetValues(typeof(AssetType)).Cast<object>()"
+                              ValueField="(x) => (AssetType)x"
+                              TextField="(x) => Enum.GetName(typeof(AssetType), (AssetType)x)"
+                              Editable="true">
+        </DataGridSelectColumn>
+        <DataGridSelectColumn 
+            Field="@nameof(Asset.AccountId)"
+            Caption="Account"
+            Data="@_accounts"
+            Editable="true">
+            <DisplayTemplate>
+                @if (_accounts != null){
+                    @_accounts.Where(i => i.Id == (context as Asset).AccountId).FirstOrDefault()?.Name;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select TValue="int"
+                        SelectedValue="@((int)( context.CellValue ))"
+                        SelectedValueChanged="@(( v ) => context.CellValue = v)">
+                    @if (_accounts != null){
+                        foreach (var account in _accounts){
+                            <SelectItem Value="@(account.Id)">@(account.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
+        </DataGridSelectColumn>
+        <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
+        <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
+        <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Quantity" Editable />
+        <DataGridColumn Field="@nameof(Asset.Price)" Caption="Price" Editable />
+        <DataGridColumn Field="@nameof(Asset.MarketValue)" Caption="Market Value" Editable />
+        <DataGridColumn Field="@nameof(Asset.PurchaseDate)" Caption="Purchase Date" Editable />
+        <DataGridColumn Field="@nameof(Asset.CostBasis)" Caption="Cost Basis" Editable />
+        <DataGridColumn Field="@nameof(Asset.SnapshotDate)" Caption="Snapshot Date" Editable />
+     </DataGridColumns>
+ </DataGrid>
+
+ @code {
+    private List<Account> _accounts = new List<Account>();
+    private List<Asset> _assets = new List<Asset>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>();
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _accounts.Add(new Account() { Id = 0, Name = "None" });
+    }
+
+    private async Task OnRowInserted(SavedRowItem<Asset, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("asset/create", e.NewItem);
+
+        if (response.IsSuccessStatusCode){
+            Asset? asset = await response.Content.ReadFromJsonAsync<Asset>();
+            if (asset != null){
+                e.OldItem.Id = asset.Id;
+            }
+
+            ToastService.ShowToast(ToastLevel.Success, $"Asset Created: Id {asset?.Id}");
+        }
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Asset Was Not Created. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<Asset, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PutAsJsonAsync($"asset/update/{e.NewItem.Id}", e.NewItem,
+            new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                }
+        );
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Asset Id {e.NewItem.Id} Updated");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Asset Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowRemoving(CancellableRowChange<Asset> e)
+    {
+        // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
+        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Asset?");
+    }
+
+    private async Task OnRowRemoved(Asset asset)
+    {
+        HttpResponseMessage? response = await Http.DeleteAsync($"asset/delete/{asset.Id}");
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Asset Id {asset.Id} Deleted");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Asset Id {asset.Id} Was Not Deleted. Response Code: {response.StatusCode}");
+    }
+}
