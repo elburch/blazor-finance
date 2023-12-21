@@ -18,7 +18,7 @@ namespace BlazorFinance.Server.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateAccount([Bind("Institution", "Type", "Name", "Number")] Account account)
+        public async Task<IActionResult> CreateAccount([Bind("InstitutionId", "Type", "Name", "Number")] Account account)
         {
             if (account == null) {
                 return StatusCode(StatusCodes.Status400BadRequest);
