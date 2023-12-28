@@ -1,8 +1,6 @@
 ﻿using BlazorFinance.Server.Repositories;
 using BlazorFinance.Shared.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using System.Net;
 
 namespace BlazorFinance.Server.Controllers
 {

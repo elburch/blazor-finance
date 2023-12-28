@@ -14,7 +14,7 @@ namespace BlazorFinance.Server.Repositories
 
         public Task<List<Asset>> ReadAssetListAsync(Expression<Func<Asset, bool>> predicate);
 
-        public Task<bool> UpdateAssetAsync(Asset account);
+        public Task<bool> UpdateAssetAsync(Asset asset);
 
         public Task<bool> DeleteAssetAsync(BsonValue id);
     }

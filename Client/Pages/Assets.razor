@@ -49,9 +49,11 @@
                 }
             </DisplayTemplate>
             <EditTemplate>
-                <Select TValue="int"
-                        SelectedValue="@((int)( context.CellValue ))"
-                        SelectedValueChanged="@(( v ) => context.CellValue = v)">
+                <Select 
+                    TValue="int"
+                    SelectedValue="@((int)( context.CellValue ))"
+                    SelectedValueChanged="@(( v ) => context.CellValue = v)"
+                >
                     @if (_accounts != null){
                         foreach (var account in _accounts){
                             <SelectItem Value="@(account.Id)">@(account.Name)</SelectItem>
@@ -101,10 +103,9 @@
     private async Task OnRowUpdated(SavedRowItem<Asset, Dictionary<string, object>> e)
     {
         HttpResponseMessage? response = await Http.PutAsJsonAsync($"asset/update/{e.NewItem.Id}", e.NewItem,
-            new JsonSerializerOptions
-                {
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                }
+            new JsonSerializerOptions{
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            }
         );
 
         if (response.IsSuccessStatusCode)

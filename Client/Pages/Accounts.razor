@@ -55,6 +55,7 @@
                     SelectedValue="@((int)( context.CellValue ))" 
                     SelectedValueChanged="@(( v ) => context.CellValue = v)"
                 >
+                    <SelectItem Value="0">&ltNone&gt</SelectItem>
                     @if (_institutions != null){
                         foreach (var institution in _institutions){
                             <SelectItem Value="@(institution.Id)">@(institution.Name)</SelectItem>
@@ -78,7 +79,6 @@
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
         _assets = await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>();
         _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
-        _institutions.Add(new Institution() { Id = 0, Name = "None" });
     }
 
     private async Task OnRowInserted(SavedRowItem<Account, Dictionary<string, object>> e)
