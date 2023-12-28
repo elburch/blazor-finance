@@ -1,0 +1,122 @@
+﻿@page "/expenses"
+@using BlazorFinance.Client.Pages.Components
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Helpers
+@using System.Net
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
+
+<h3>Expenses</h3>
+
+<DataGrid TItem="Expense"
+          Data="@_expenses"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          RowRemoving="@OnRowRemoving"
+          RowRemoved="@OnRowRemoved"
+          Editable="true"
+          ShowPager="true"
+          Responsive>
+    <DataGridColumns>
+        <DataGridCommandColumn>
+            <NewCommandTemplate>
+                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
+            </NewCommandTemplate>
+            <EditCommandTemplate>
+                <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
+            </EditCommandTemplate>
+            <DeleteCommandTemplate>
+                <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
+            </DeleteCommandTemplate>
+        </DataGridCommandColumn>
+        <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
+        <DataGridSelectColumn 
+            Field="@nameof(Expense.Account)"
+            Caption="Account"
+            Editable="true">
+            <DisplayTemplate>
+                @if (_accounts != null){
+                    @_accounts.FirstOrDefault(x => x.Id == (context as Expense).Account?.Id)?.Name;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select 
+                    TValue="int"
+                    SelectedValue="@((int)((Account)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))"
+                >
+                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                    @if (_accounts != null){
+                        foreach (var account in _accounts){
+                            <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
+        </DataGridSelectColumn>
+        <DataGridColumn Field="@nameof(Expense.Description)" Caption="Description" Editable />
+        <DataGridColumn Field="@nameof(Expense.Amount)" Caption="Amount" Editable />
+        <DataGridColumn Field="@nameof(Expense.Frequency)" Caption="Frequency" Editable />
+        <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
+        <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
+     </DataGridColumns>
+ </DataGrid>
+
+ @code {
+    private List<Account> _accounts = new List<Account>();
+    private List<Expense> _expenses = new List<Expense>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense") ?? new List<Expense>();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<Expense, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("expense/create", e.NewItem);
+
+        if (response.IsSuccessStatusCode){
+            Expense? expense = await response.Content.ReadFromJsonAsync<Expense>();
+            if (expense != null){
+                e.OldItem.Id = expense.Id;
+            }
+
+            ToastService.ShowToast(ToastLevel.Success, $"Expense Created: Id {expense?.Id}");
+        }
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Expense Was Not Created. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<Expense, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PutAsJsonAsync($"expense/update/{e.NewItem.Id}", e.NewItem,
+            new JsonSerializerOptions{
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            }
+        );
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Expense Id {e.NewItem.Id} Updated");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Expense Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowRemoving(CancellableRowChange<Expense> e)
+    {
+        // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
+        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Expense?");
+    }
+
+    private async Task OnRowRemoved(Expense expense)
+    {
+        HttpResponseMessage? response = await Http.DeleteAsync($"expense/delete/{expense.Id}");
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Expense Id {expense.Id} Deleted");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Expense Id {expense.Id} Was Not Deleted. Response Code: {response.StatusCode}");
+    }
+}

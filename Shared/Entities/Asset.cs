@@ -22,11 +22,14 @@ namespace BlazorFinance.Shared.Entities
         // Quantity * Price
         public decimal MarketValue { get; set; }
 
-        // Asset purchase date
-        public DateOnly PurchaseDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
-
         // Market Value at time of purchase
         public decimal CostBasis { get; set; }
+
+        // Annual growth as percentage - how will this be factored into projections?
+        public double AnnualGrowth { get; set; }
+
+        // Asset purchase date
+        public DateOnly PurchaseDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
         // Timestamp of Price and Value metrics (as of)
         public DateTime SnapshotDate { get; set; } = DateTime.Now;
