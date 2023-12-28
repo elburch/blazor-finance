@@ -4,7 +4,7 @@ namespace BlazorFinance.Shared.Helpers
 {
     public enum AssetType
     {
-        [Display(Name = "None")]
+        [Display(Name = "<None>")]
         None,
         [Display(Name = "Stock")]
         Stock,

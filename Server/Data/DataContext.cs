@@ -1,6 +1,11 @@
 ﻿using BlazorFinance.Shared.Entities;
 using LiteDB;
+using LiteDB.Engine;
+using System.Collections.Generic;
+using System;
 using System.Linq.Expressions;
+using System.Xml.Linq;
+using System.Xml;
 
 namespace BlazorFinance.Server.Data
 {
@@ -23,8 +28,27 @@ namespace BlazorFinance.Server.Data
 
             if (!File.Exists(_dbpath)) {
                 using FileStream fs = File.Create(_dbpath);
-                    fs.Close();
+                fs.Close();
             }
+
+//        LiteException: Cannot insert duplicate key in unique index 'idx_account_name'.The duplicate value is 'null'.
+//LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, byte level, IndexNode last)
+//LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last)
+//LiteDB.Engine.LiteEngine +<> c__DisplayClass5_0.< EnsureIndex > b__0(TransactionService transaction)
+//LiteDB.Engine.LiteEngine.AutoTransaction<T>(Func < TransactionService, T > fn)
+//LiteDB.Engine.LiteEngine.EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+//BlazorFinance.Server.Data.DataContext < TEntity > ..cctor() in DataContext.cs
+//+
+//                engine.EnsureIndex("Account", "idx_account_name", "$.Account.Name", true);
+
+
+            //using (LiteEngine engine = new LiteEngine(_dbpath))
+            //{
+            //    engine.EnsureIndex("Account", "idx_account_name", "$.Account.Name", true);
+            //    engine.EnsureIndex("Asset", "idx_asset_description", "$.Asset.Description", true);
+            //    engine.EnsureIndex("Expense", "idx_expense_description", "$.Expense.Description", true);
+            //    engine.EnsureIndex("Institution", "idx_institution_name", "$.Institution.Name", true);
+            //}
         }
 
         public async Task<BsonValue> Create(TEntity entity)
