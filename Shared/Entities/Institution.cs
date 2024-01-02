@@ -1,9 +1,11 @@
 ﻿using BlazorFinance.Shared.Helpers;
+using LiteDB;
 
 namespace BlazorFinance.Shared.Entities
 {
     public class Institution : IEntity
     {
+        [BsonId]
         public int Id { get; set; }
 
         public InstitutionType Type { get; set; }
