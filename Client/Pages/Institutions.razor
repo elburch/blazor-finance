@@ -51,12 +51,10 @@
 </DataGrid>
 
  @code {
-    private List<Account> _accounts = new List<Account>();
     private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
-        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
         _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
     }
 
@@ -92,14 +90,16 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Institution> e)
     {
-        List<Account> accounts = _accounts
+        var accounts = (await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>())
             .Where(t => t.InstitutionId == e.OldItem.Id)
             .ToList<Account>();
 
-        e.Cancel = accounts.Count > 0 
+        if (accounts.Count > 0)
+            await JSRuntime.InvokeVoidAsync("alert", "Cannot delete Institutions having related Account records");
+
+        e.Cancel = accounts.Count > 0 ?
             // Dialogs return true when confirming delete prompt, false when canceled (use negation to sync with args)
-            ? !await JSRuntime.InvokeAsync<bool>("alert", "Cannot delete Institutions having related Account records")
-            : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Institution?");
+            true : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Institution?");
     }
 
     private async Task OnRowRemoved(Institution institution)
