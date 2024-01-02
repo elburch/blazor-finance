@@ -58,7 +58,14 @@
         </DataGridSelectColumn>
         <DataGridColumn Field="@nameof(Expense.Description)" Caption="Description" Editable />
         <DataGridColumn Field="@nameof(Expense.Amount)" Caption="Amount" Editable />
-        <DataGridColumn Field="@nameof(Expense.Frequency)" Caption="Frequency" Editable />
+        <DataGridSelectColumn 
+            Field="@nameof(Expense.Frequency)"
+            Caption="Frequency"
+            Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
+            ValueField="(x) => (Frequency)x"
+            TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
+            Editable="true">
+        </DataGridSelectColumn>
         <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
         <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
      </DataGridColumns>

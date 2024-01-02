@@ -2,6 +2,7 @@
 @using BlazorFinance.Shared.Entities
 @using BlazorFinance.Shared.Helpers
 @using System.Net
+@using System.Text
 @using System.Text.Json
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
@@ -71,13 +72,11 @@
 
  @code {
     private List<Account> _accounts = new List<Account>();
-    private List<Asset> _assets = new List<Asset>();
     private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
-        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>();
         _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
     }
 
@@ -113,14 +112,28 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Account> e)
     {
-        List<Asset> assets = _assets
+        var assets = (await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>())
             .Where(t => t.AccountId == e.OldItem.Id)
-            .ToList<Asset>();
+            .ToList<Asset>() ?? new List<Asset>();
 
-        e.Cancel = assets.Count > 0
+        var expenses = (await Http.GetFromJsonAsync<List<Expense>>("expense") ?? new List<Expense>())
+            .Where(t => t.Account?.Id == e.OldItem.Id)
+            .ToList<Expense>() ?? new List<Expense>();
+
+        StringBuilder alerts = new StringBuilder();
+
+        if (assets.Count > 0)
+            alerts.AppendLine("Cannot delete Accounts having related Asset records");
+
+        if (expenses.Count > 0)
+            alerts.AppendLine("Cannot delete Accounts having related Expense records");
+
+        if (alerts.Length > 0)
+            await JSRuntime.InvokeVoidAsync("alert", alerts.ToString());
+
+        e.Cancel = alerts.Length > 0 ?
             // Dialogs return true when confirming delete prompt, false when canceled (use negation to sync with args)
-            ? !await JSRuntime.InvokeAsync<bool>("alert", "Cannot delete Accounts having related Asset records")
-            : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Account?");
+            true : !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Account?");
     }
 
     private async Task OnRowRemoved(Account account)

@@ -12,6 +12,8 @@ namespace BlazorFinance.Server.Data
 
         public Task<List<TEntity>> Read();
 
+        public Task<List<TEntity>> Read(BsonExpression expression);
+
         public Task<List<TEntity>> Read(Expression<Func<TEntity, bool>> predicate, params string[] properties);
 
         public Task<bool> Update(TEntity entity);

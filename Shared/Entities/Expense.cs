@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using BlazorFinance.Shared.Helpers;
+using LiteDB;
 
 namespace BlazorFinance.Shared.Entities
 {
@@ -11,14 +12,14 @@ namespace BlazorFinance.Shared.Entities
         /// BsonRef creates a reference between collections
         /// reference: https://www.litedb.org/docs/dbref/
         /// </summary>
-        [BsonRef("Account")]
+        [BsonRef("account")]
         public Account? Account { get; set; } = new Account();
 
         public string Description { get; set; } = string.Empty;
 
         public decimal Amount { get; set; }
 
-        public int Frequency { get; set; }
+        public Frequency Frequency { get; set; }
 
         public DateOnly StartingDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 

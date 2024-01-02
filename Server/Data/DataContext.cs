@@ -31,15 +31,16 @@ namespace BlazorFinance.Server.Data
                 fs.Close();
             }
 
-//        LiteException: Cannot insert duplicate key in unique index 'idx_account_name'.The duplicate value is 'null'.
-//LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, byte level, IndexNode last)
-//LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last)
-//LiteDB.Engine.LiteEngine +<> c__DisplayClass5_0.< EnsureIndex > b__0(TransactionService transaction)
-//LiteDB.Engine.LiteEngine.AutoTransaction<T>(Func < TransactionService, T > fn)
-//LiteDB.Engine.LiteEngine.EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
-//BlazorFinance.Server.Data.DataContext < TEntity > ..cctor() in DataContext.cs
-//+
-//                engine.EnsureIndex("Account", "idx_account_name", "$.Account.Name", true);
+
+            //        LiteException: Cannot insert duplicate key in unique index 'idx_account_name'.The duplicate value is 'null'.
+            //LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, byte level, IndexNode last)
+            //LiteDB.Engine.IndexService.AddNode(CollectionIndex index, BsonValue key, PageAddress dataBlock, IndexNode last)
+            //LiteDB.Engine.LiteEngine +<> c__DisplayClass5_0.< EnsureIndex > b__0(TransactionService transaction)
+            //LiteDB.Engine.LiteEngine.AutoTransaction<T>(Func < TransactionService, T > fn)
+            //LiteDB.Engine.LiteEngine.EnsureIndex(string collection, string name, BsonExpression expression, bool unique)
+            //BlazorFinance.Server.Data.DataContext < TEntity > ..cctor() in DataContext.cs
+            //+
+            //                engine.EnsureIndex("Account", "idx_account_name", "$.Account.Name", true);
 
 
             //using (LiteEngine engine = new LiteEngine(_dbpath))
@@ -105,6 +106,42 @@ namespace BlazorFinance.Server.Data
                     $"An exception occurred while attempting to get {nameof(TEntity)} records.  Message: {ex.Message}"
                 );
             }
+        }
+
+        /// <summary>
+        /// Use to include a where clause and related tables
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+        /// <exception cref="ApplicationException"></exception>
+        public async Task<List<TEntity>> Read(BsonExpression expression)
+        {
+            List<TEntity> entities;
+
+            try
+            {
+                using (LiteDatabase db = new LiteDatabase(_dbpath))
+                {
+                    BsonMapper.Global.Entity<Account>()
+                        .DbRef(x => x.Expenses, "Expense");
+
+                    ILiteQueryable<TEntity> query = await Task.Run(() => db
+                        .GetCollection<TEntity>()
+                        .Query()
+                    );
+
+                    entities = query.Include(expression).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(
+                    $"An exception occurred while attempting to get {nameof(TEntity)} records.  Message: {ex.Message}"
+                );
+            }
+
+            return entities;
         }
 
         /// <summary>
