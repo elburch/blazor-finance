@@ -65,10 +65,46 @@
         <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
         <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
         <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Quantity" Editable />
-        <DataGridColumn Field="@nameof(Asset.Price)" Caption="Price" Editable />
-        <DataGridColumn Field="@nameof(Asset.MarketValue)" Caption="Market Value" Editable />
+        <DataGridColumn 
+            Field="@nameof(Asset.Price)"
+            Caption="Price"
+            DisplayFormat="{0:C}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit 
+                    TValue="decimal"
+                    Value="@((decimal)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
+        <DataGridColumn 
+            Field="@nameof(Asset.CostBasis)"
+            Caption="Cost Basis"
+            DisplayFormat="{0:C}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit 
+                    TValue="decimal"
+                    Value="@((decimal)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
+        <DataGridColumn 
+            Field="@nameof(Asset.MarketValue)"
+            Caption="Market Value"
+            DisplayFormat="{0:C}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit 
+                    TValue="decimal"
+                    Value="@((decimal)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
         <DataGridColumn Field="@nameof(Asset.PurchaseDate)" Caption="Purchase Date" Editable />
-        <DataGridColumn Field="@nameof(Asset.CostBasis)" Caption="Cost Basis" Editable />
         <DataGridColumn Field="@nameof(Asset.SnapshotDate)" Caption="Snapshot Date" Editable />
      </DataGridColumns>
  </DataGrid>

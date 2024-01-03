@@ -11,6 +11,8 @@ namespace BlazorFinance.Shared.Helpers
         [Display(Name = "Savings")]
         Savings,
         [Display(Name = "Discount")]
+        Checking,
+        [Display(Name = "Checking")]
         Discount,
         [Display(Name = "Education")]
         Education,
@@ -29,6 +31,12 @@ namespace BlazorFinance.Shared.Helpers
         [Display(Name = "Roth 401K")]
         Roth401K,
         [Display(Name = "Traditional 401K")]
-        Traditional401K
+        Traditional401K,
+        [Display(Name = "Pension")]
+        Pension,
+        [Display(Name = "Social Security")]
+        SocialSecurity,
+        [Display(Name = "Mortgage")]
+        Mortgage
     }
 }
