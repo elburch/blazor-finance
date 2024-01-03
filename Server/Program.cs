@@ -13,11 +13,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IDataContext<Account>, DataContext<Account>>();
 builder.Services.AddScoped<IDataContext<Asset>, DataContext<Asset>>();
 builder.Services.AddScoped<IDataContext<Expense>, DataContext<Expense>>();
+builder.Services.AddScoped<IDataContext<Income>, DataContext<Income>>();
 builder.Services.AddScoped<IDataContext<Institution>, DataContext<Institution>>();
 // Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAssetRepository, AssetRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
+builder.Services.AddScoped<IIncomeRepository, IncomeRepository>();
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
 // Services
 builder.Services.AddScoped<IQuoteService, QuoteService>();
