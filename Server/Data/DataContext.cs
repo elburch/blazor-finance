@@ -123,9 +123,6 @@ namespace BlazorFinance.Server.Data
             {
                 using (LiteDatabase db = new LiteDatabase(_dbpath))
                 {
-                    BsonMapper.Global.Entity<Account>()
-                        .DbRef(x => x.Expenses, "Expense");
-
                     ILiteQueryable<TEntity> query = await Task.Run(() => db
                         .GetCollection<TEntity>()
                         .Query()

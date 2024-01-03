@@ -1,4 +1,4 @@
-﻿@page "/expenses"
+﻿@page "/incomes"
 @using BlazorFinance.Client.Pages.Components
 @using BlazorFinance.Shared.Entities
 @using BlazorFinance.Shared.Helpers
@@ -8,10 +8,10 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 
-<h3>Expenses</h3>
+<h3>Income</h3>
 
-<DataGrid TItem="Expense"
-          Data="@_expenses"
+<DataGrid TItem="Income"
+          Data="@_income"
           RowInserted="@OnRowInserted"
           RowUpdated="@OnRowUpdated"
           RowRemoving="@OnRowRemoving"
@@ -31,22 +31,20 @@
                 <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
             </DeleteCommandTemplate>
         </DataGridCommandColumn>
-        <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
+        <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
         <DataGridSelectColumn 
-            Field="@nameof(Expense.Account)"
+            Field="@nameof(Income.Account)"
             Caption="Account"
             Editable="true">
             <DisplayTemplate>
                 @if (_accounts != null){
-                    @_accounts.FirstOrDefault(x => x.Id == (context as Expense).Account?.Id)?.Name;
+                    @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name;
                 }
             </DisplayTemplate>
             <EditTemplate>
-                <Select 
-                    TValue="int"
-                    SelectedValue="@((int)((Account)context.CellValue).Id)"
-                    SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))"
-                >
+                <Select TValue="int"
+                        SelectedValue="@((int)((Account)context.CellValue).Id)"
+                        SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
                     <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
                     @if (_accounts != null){
                         foreach (var account in _accounts){
@@ -56,87 +54,89 @@
                 </Select>
             </EditTemplate>
         </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Expense.Description)" Caption="Description" Editable />
+        <DataGridColumn Field="@nameof(Income.Description)" Caption="Description" Editable />
         <DataGridColumn 
-            Field="@nameof(Expense.Amount)" 
-            Caption="Amount" 
+            Field="@nameof(Expense.Amount)"
+            Caption="Amount"
             DisplayFormat="{0:C}"
             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
             Editable
         >
             <EditTemplate>
                 <NumericEdit 
-                    TValue="decimal" 
-                    Value="@((decimal)context.CellValue)" 
+                    TValue="decimal"
+                    Value="@((decimal)context.CellValue)"
                     ValueChanged="@( v => context.CellValue = v)" />
             </EditTemplate>
         </DataGridColumn>
         <DataGridSelectColumn 
-            Field="@nameof(Expense.Frequency)"
+            Field="@nameof(Income.Frequency)"
             Caption="Frequency"
             Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
             ValueField="(x) => (Frequency)x"
             TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
             Editable="true">
         </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
-        <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
+        <DataGridColumn Field="@nameof(Income.StartingDate)" Caption="Starting Date" Editable />
+        <DataGridColumn Field="@nameof(Income.EndingDate)" Caption="Ending Date" Editable />
      </DataGridColumns>
  </DataGrid>
 
  @code {
     private List<Account> _accounts = new List<Account>();
-    private List<Expense> _expenses = new List<Expense>();
+    private List<Income> _income = new List<Income>();
 
     protected override async Task OnInitializedAsync()
     {
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
-        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense") ?? new List<Expense>();
+        _income = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
     }
 
-    private async Task OnRowInserted(SavedRowItem<Expense, Dictionary<string, object>> e)
+    private async Task OnRowInserted(SavedRowItem<Income, Dictionary<string, object>> e)
     {
-        HttpResponseMessage? response = await Http.PostAsJsonAsync("expense/create", e.NewItem);
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("income/create", e.NewItem);
 
         if (response.IsSuccessStatusCode){
-            Expense? expense = await response.Content.ReadFromJsonAsync<Expense>();
-            if (expense != null){
-                e.OldItem.Id = expense.Id;
+            Income? income = await response.Content.ReadFromJsonAsync<Income>();
+            if (income != null){
+                e.OldItem.Id = income.Id;
             }
 
-            ToastService.ShowToast(ToastLevel.Success, $"Expense Created: Id {expense?.Id}");
+            ToastService.ShowToast(ToastLevel.Success, $"Income Created: Id {income?.Id}");
         }
         else
-            ToastService.ShowToast(ToastLevel.Error, $"Expense Was Not Created. Response Code: {response.StatusCode}");
+            ToastService.ShowToast(ToastLevel.Error, $"Income Was Not Created. Response Code: {response.StatusCode}");
     }
 
-    private async Task OnRowUpdated(SavedRowItem<Expense, Dictionary<string, object>> e)
+    private async Task OnRowUpdated(SavedRowItem<Income, Dictionary<string, object>> e)
     {
-        HttpResponseMessage? response = await Http.PutAsJsonAsync($"expense/update/{e.NewItem.Id}", e.NewItem,
-            new JsonSerializerOptions{
-                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-            }
+        HttpResponseMessage? response = await Http.PutAsJsonAsync($"income/update/{e.NewItem.Id}", e.NewItem,
+            new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                }
         );
 
         if (response.IsSuccessStatusCode)
-            ToastService.ShowToast(ToastLevel.Success, $"Expense Id {e.NewItem.Id} Updated");
+            ToastService.ShowToast(ToastLevel.Success, $"Income Id {e.NewItem.Id} Updated");
         else
-            ToastService.ShowToast(ToastLevel.Error, $"Expense Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
+            ToastService.ShowToast(ToastLevel.Error, $"Income Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
     }
 
-    private async Task OnRowRemoving(CancellableRowChange<Expense> e)
+    private async Task OnRowRemoving(CancellableRowChange<Income> e)
     {
         // Dialog returns true when confirming delete prompt, false when canceled (use negation to sync with args)
-        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Expense?");
+        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Income?");
     }
 
-    private async Task OnRowRemoved(Expense expense)
+    private async Task OnRowRemoved(Income income)
     {
-        HttpResponseMessage? response = await Http.DeleteAsync($"expense/delete/{expense.Id}");
+        HttpResponseMessage? response = await Http.DeleteAsync($"income/delete/{income.Id}");
 
         if (response.IsSuccessStatusCode)
-            ToastService.ShowToast(ToastLevel.Success, $"Expense Id {expense.Id} Deleted");
+            ToastService.ShowToast(ToastLevel.Success, $"Income Id {income.Id} Deleted");
         else
-            ToastService.ShowToast(ToastLevel.Error, $"Expense Id {expense.Id} Was Not Deleted. Response Code: {response.StatusCode}");
+            ToastService.ShowToast(ToastLevel.Error, $"Income Id {income.Id} Was Not Deleted. Response Code: {response.StatusCode}");
     }
 }
+

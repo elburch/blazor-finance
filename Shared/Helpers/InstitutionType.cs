@@ -19,6 +19,12 @@ namespace BlazorFinance.Shared.Helpers
         [Display(Name = "Insurance Company")]
         InsuranceCompany,
         [Display(Name = "Mortgage Company")]
-        MortgageCompany
+        MortgageCompany,
+        [Display(Name = "Federal")]
+        Federal,
+        [Display(Name = "City")]
+        City,
+        [Display(Name = "State")]
+        State
     }
 }
