@@ -16,7 +16,7 @@ namespace BlazorFinance.Server.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateAccount([Bind("InstitutionId", "Type", "Name", "Number")] Account account)
+        public async Task<IActionResult> CreateAccount([Bind("InstitutionId", "Type", "Name", "Number", "MarketValue", "AnnualGrowth")] Account account)
         {
             if (account == null) {
                 return StatusCode(StatusCodes.Status400BadRequest);
@@ -27,7 +27,7 @@ namespace BlazorFinance.Server.Controllers
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
-        [HttpGet]
+        [HttpGet("read")]
         public async Task<List<Account>> ReadAccountList()
         {
             return await _repository.ReadAccountListAsync();

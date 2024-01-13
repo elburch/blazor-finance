@@ -8,12 +8,12 @@ namespace BlazorFinance.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class PortfolioSummaryController : ControllerBase
+    public class PortfolioController : ControllerBase
     {
-        private readonly ILogger<PortfolioSummaryController> _logger;
+        private readonly ILogger<PortfolioController> _logger;
         private readonly IQuoteService _quoteService;
 
-        public PortfolioSummaryController(ILogger<PortfolioSummaryController> logger, IQuoteService portfolioSummaryService)
+        public PortfolioController(ILogger<PortfolioController> logger, IQuoteService portfolioSummaryService)
         {
             _logger = logger;
             _quoteService = portfolioSummaryService;
@@ -25,9 +25,9 @@ namespace BlazorFinance.Server.Controllers
             // TO DO: hard-coded - need to get stock symbols from LiteDB service layer
             List<string> symbols = new List<string>() { "AAPL", "GOOG" };
 
-            IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(symbols);
+            //IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(symbols);
 
-            return PrepareModel(quotes);
+            return new List<StockModel>(); //PrepareModel(quotes);
         }
 
         internal List<StockModel> PrepareModel(IReadOnlyDictionary<string, Security> quotes)

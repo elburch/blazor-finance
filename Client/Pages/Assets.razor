@@ -115,8 +115,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>();
-        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
         _accounts.Add(new Account() { Id = 0, Name = "None" });
     }
 

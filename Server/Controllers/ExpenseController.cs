@@ -29,7 +29,7 @@ namespace BlazorFinance.Server.Controllers
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
-        [HttpGet]
+        [HttpGet("read")]
         public async Task<List<Expense>> ReadExpenseList()
         {
             return await _repository.ReadExpenseListAsync();

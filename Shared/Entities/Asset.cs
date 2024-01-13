@@ -27,7 +27,7 @@ namespace BlazorFinance.Shared.Entities
         // Market Value at time of purchase
         public decimal CostBasis { get; set; }
 
-        // Annual growth as percentage - how will this be factored into projections?
+        // Annual growth as percentage
         public double AnnualGrowth { get; set; }
 
         // Asset purchase date
