@@ -28,7 +28,7 @@ namespace BlazorFinance.Server.Controllers
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
-        [HttpGet]
+        [HttpGet("read")]
         public async Task<List<Institution>> ReadInstitutionList()
         {
             return await _repository.ReadInstitutionListAsync();

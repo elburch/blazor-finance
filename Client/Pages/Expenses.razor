@@ -34,7 +34,7 @@
         <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
         <DataGridSelectColumn 
             Field="@nameof(Expense.Account)"
-            Caption="Account"
+            Caption="Pay From Account"
             Editable="true">
             <DisplayTemplate>
                 @if (_accounts != null){
@@ -51,6 +51,28 @@
                     @if (_accounts != null){
                         foreach (var account in _accounts){
                             <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
+        </DataGridSelectColumn>
+        <DataGridSelectColumn 
+            Field="@nameof(Expense.Asset)"
+            Caption="Pay From Asset"
+            Editable="true">
+            <DisplayTemplate>
+                @if (_assets != null){
+                    @_assets.FirstOrDefault(x => x.Id == (context as Expense).Asset?.Id)?.Description;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select TValue="int"
+                        SelectedValue="@((int)((Asset)context.CellValue).Id)"
+                        SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
+                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                    @if (_assets != null){
+                        foreach (var asset in _assets){
+                            <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
                         }
                     }
                 </Select>
@@ -85,13 +107,19 @@
  </DataGrid>
 
  @code {
-    private List<Account> _accounts = new List<Account>();
+    // Primary Entity
     private List<Expense> _expenses = new List<Expense>();
+    // Related Entitites
+    private List<Account> _accounts = new List<Account>();
+    private List<Asset> _assets = new List<Asset>();
 
     protected override async Task OnInitializedAsync()
     {
-        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
-        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense") ?? new List<Expense>();
+        // Primary Entity
+        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
+        // Related Entitites
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Expense, Dictionary<string, object>> e)

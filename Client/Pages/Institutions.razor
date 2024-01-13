@@ -2,6 +2,7 @@
 @using BlazorFinance.Shared.Entities
 @using BlazorFinance.Shared.Helpers
 @using System.Net
+@using System.Text
 @using System.Text.Json
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
@@ -55,7 +56,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
+        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Institution, Dictionary<string, object>> e)
@@ -90,11 +91,23 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Institution> e)
     {
-        var accounts = (await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>())
+        var accounts = (await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>())
             .Where(t => t.InstitutionId == e.OldItem.Id)
             .ToList<Account>();
 
+        var income = (await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>())
+            .Where(t => t.Institution?.Id == e.OldItem.Id)
+            .ToList<Income>();
+
+        StringBuilder errors = new StringBuilder();
+
         if (accounts.Count > 0)
+            errors.AppendLine("Cannot delete Institutions having related Income records");
+
+        if (income.Count > 0)
+            errors.AppendLine("Cannot delete Institutions having related Account records");
+
+        if (errors.Length > 0)
             await JSRuntime.InvokeVoidAsync("alert", "Cannot delete Institutions having related Account records");
 
         e.Cancel = accounts.Count > 0 ?

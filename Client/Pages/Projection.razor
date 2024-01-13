@@ -1,0 +1,183 @@
+﻿@page "/projection"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Helpers
+@using BlazorFinance.Shared.Models
+@inject HttpClient Http
+
+<h3>Income Projection</h3>
+
+<Row>
+    <Column ColumnSize="ColumnSize.Is2">
+        <Field>
+            <FieldLabel>
+                Current Age
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="int" @bind-Value="@_projection.CurrentAge" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Retirement Age
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="int" @bind-Value="@_projection.RetirementAge" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Expiration Age
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="int" @bind-Value="@_projection.ExpirationAge" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Annual Inflation
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="decimal" @bind-Value="@_projection.AnnualInflation" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Savings Contribution
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="decimal" @bind-Value="@_projection.SavingsContribution" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldBody>
+                <Button Clicked="@GetSavingsProjection" Class="btn-primary calc">Calculate</Button>
+            </FieldBody>
+        </Field>
+    </Column>
+    <Column>
+        <LineChart @ref="_chart" TItem="decimal" />
+        <Div>Year of Retirement</Div>
+    </Column>
+</Row>      
+
+
+@code {
+    private bool _loading = false;
+
+    private ProjectionModel _projection = new ProjectionModel()
+    {
+        CurrentAge = 35,
+        RetirementAge = 67,
+        ExpirationAge = 107,
+        AnnualInflation = 3.0M,
+        SavingsContribution = 200.00M,
+     };
+
+    private LineChart<decimal> _chart = new LineChart<decimal>();
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender){
+            await GetSavingsProjection();
+        }
+    }
+
+    private async Task GetSavingsProjection()
+    {
+        _loading = true;
+
+
+        string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
+        //int[] Labels = Enumerable.Range(_projection.CurrentAge, _projection.ExpirationAge - _projection.CurrentAge).ToArray();
+
+        List<string> backgroundColors = new List<string> { 
+            ChartColor.FromRgba(255, 99, 132, 0.2f), 
+            ChartColor.FromRgba(54, 162, 235, 0.2f), 
+            ChartColor.FromRgba(255, 206, 86, 0.2f), 
+            ChartColor.FromRgba(75, 192, 192, 0.2f), 
+            ChartColor.FromRgba(153, 102, 255, 0.2f), 
+            ChartColor.FromRgba(255, 159, 64, 0.2f) 
+        };
+
+        List<string> borderColors = new List<string> { 
+            ChartColor.FromRgba(255, 99, 132, 1f), 
+            ChartColor.FromRgba(54, 162, 235, 1f), 
+            ChartColor.FromRgba(255, 206, 86, 1f), 
+            ChartColor.FromRgba(75, 192, 192, 1f), 
+            ChartColor.FromRgba(153, 102, 255, 1f), 
+            ChartColor.FromRgba(255, 159, 64, 1f) 
+        };
+
+
+        // build labels based on # of months or years
+        // replace RandomizeData() with a recursive function to iterate timespan between today and expiration date (decrement date?)
+
+        List<Asset>? assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
+        List<Income> income = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+
+        // MarketValue - Income.Withdrawals += AnnualGrowth
+        List<Asset>? liquidAssets = assets.Where(t => t.Type.isLiquid()).ToList<Asset>();
+
+        // MarketValue += AnnualGrowth
+        List<Asset>? illiquidAssets = assets.Where(t => t.Type.isIlliquid()).ToList<Asset>();
+
+        // TO DO: get expenses withdrawn from an asset so we can adjust the asset balance over time
+        // NOTE: we need to add annual growth to the asset while also subtracting withdrawals
+
+        List<int> labels = new List<int>();
+        List<double> data = new List<double>();
+
+        int year = _projection.CurrentAge;
+        while(year <= _projection.ExpirationAge){
+
+
+            labels.Add(year);
+            year += 1;
+        }
+
+        var liquid = new LineChartDataset<decimal>
+            {
+                Label = "Liquid Assets $",
+                Data = RandomizeData(),
+                BackgroundColor = backgroundColors,
+                BorderColor = borderColors,
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone",
+            };
+
+        var illiquid = new LineChartDataset<decimal>
+            {
+                Label = "Illiquid Assets $",
+                Data = RandomizeData(),
+                BackgroundColor = backgroundColors,
+                BorderColor = borderColors,
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone",
+            };
+
+        await _chart.Clear();
+        await _chart.AddLabels(Labels);
+        await _chart.AddDataSet(liquid);
+        await _chart.AddDataSet(illiquid);
+        await _chart.Update();
+
+        _loading = false;
+    }
+
+    List<decimal> RandomizeData()
+    {
+        var r = new Random(DateTime.Now.Millisecond);
+
+        return new List<decimal> {
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
+            (decimal)(r.Next( 3, 50 ) * r.NextDouble()) 
+        };
+    }
+}

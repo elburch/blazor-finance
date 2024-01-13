@@ -25,6 +25,8 @@ namespace BlazorFinance.Shared.Helpers
         [Display(Name = "City")]
         City,
         [Display(Name = "State")]
-        State
+        State,
+        [Display(Name = "Employer")]
+        Employer
     }
 }

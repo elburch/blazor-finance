@@ -16,7 +16,7 @@ namespace BlazorFinance.Server.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateAsset([Bind("AccountId", "Type", "Symbol", "Description", "Quantity", "Price", "MarketValue", "PurchaseDate", "CostBasis", "SnapshotDate")] Asset asset)
+        public async Task<IActionResult> CreateAsset([Bind("AccountId", "Type", "Symbol", "Description", "Quantity", "Price", "MarketValue", "PurchaseDate", "CostBasis", "AnnualGrowth", "PurchaseDate", "SnapshotDate")] Asset asset)
         {
             if (asset == null){
                 return StatusCode(StatusCodes.Status400BadRequest);
@@ -27,7 +27,7 @@ namespace BlazorFinance.Server.Controllers
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
 
-        [HttpGet]
+        [HttpGet("read")]
         public async Task<List<Asset>> ReadAssetList()
         {
             return await _repository.ReadAssetListAsync();

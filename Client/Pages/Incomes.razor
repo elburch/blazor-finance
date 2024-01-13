@@ -33,12 +33,37 @@
         </DataGridCommandColumn>
         <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
         <DataGridSelectColumn 
-            Field="@nameof(Income.Account)"
-            Caption="Account"
+            Field="@nameof(Income.Institution)"
+            Caption="Received From Institution"
             Editable="true">
             <DisplayTemplate>
-                @if (_accounts != null){
-                    @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name;
+                @if (_institutions != null){
+                    @_institutions.FirstOrDefault(x => x.Id == (context as Income).Institution?.Id)?.Name;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select 
+                    TValue="int"
+                    SelectedValue="@((int)((Institution)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = _institutions.FirstOrDefault(x => x.Id == v))">
+                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                    @if (_institutions != null){
+                        foreach (var institution in _institutions){
+                            <SelectItem TValue="int" Value="@(institution.Id)">@(institution.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
+        </DataGridSelectColumn>
+        <DataGridSelectColumn 
+            Field="@nameof(Income.Account)"
+            Caption="Deposit To Account"
+            Editable="true">
+            <DisplayTemplate>
+                @if (_accounts != null)
+                {
+                    @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name
+                    ;
                 }
             </DisplayTemplate>
             <EditTemplate>
@@ -46,9 +71,34 @@
                         SelectedValue="@((int)((Account)context.CellValue).Id)"
                         SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
                     <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                    @if (_accounts != null){
-                        foreach (var account in _accounts){
+                    @if (_accounts != null)
+                    {
+                        foreach (var account in _accounts)
+                        {
                             <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                        }
+                    }
+                </Select>
+            </EditTemplate>
+        </DataGridSelectColumn>
+        <DataGridSelectColumn 
+            Field="@nameof(Income.Asset)"
+            Caption="Invest In Asset"
+            Editable="true">
+            <DisplayTemplate>
+                @if (_assets != null){
+                    @_assets.FirstOrDefault(x => x.Id == (context as Income).Asset?.Id)?.Description;
+                }
+            </DisplayTemplate>
+            <EditTemplate>
+                <Select 
+                    TValue="int"
+                    SelectedValue="@((int)((Asset)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
+                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                    @if (_assets != null){
+                        foreach (var asset in _assets){
+                            <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
                         }
                     }
                 </Select>
@@ -56,7 +106,7 @@
         </DataGridSelectColumn>
         <DataGridColumn Field="@nameof(Income.Description)" Caption="Description" Editable />
         <DataGridColumn 
-            Field="@nameof(Expense.Amount)"
+            Field="@nameof(Income.Amount)"
             Caption="Amount"
             DisplayFormat="{0:C}"
             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
@@ -83,13 +133,21 @@
  </DataGrid>
 
  @code {
-    private List<Account> _accounts = new List<Account>();
+    // Primary Entity
     private List<Income> _income = new List<Income>();
+    // Related Entitites
+    private List<Account> _accounts = new List<Account>();
+    private List<Asset> _assets = new List<Asset>();
+    private List<Institution> _institutions = new List<Institution>();
 
     protected override async Task OnInitializedAsync()
     {
-        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
+        // Primary Entity
         _income = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+        // Related Entitites
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
+        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Income, Dictionary<string, object>> e)
