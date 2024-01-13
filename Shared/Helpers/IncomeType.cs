@@ -16,6 +16,10 @@ namespace BlazorFinance.Shared.Helpers
         [Display(Name = "Pension")]
         Pension,
         [Display(Name = "Social Security")]
-        SocialSecurity
+        SocialSecurity,
+        [Display(Name = "Wages")]
+        Wages,
+        [Display(Name = "Withdrawal")]
+        Withdrawal
     }
 }

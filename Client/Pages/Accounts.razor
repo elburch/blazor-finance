@@ -67,6 +67,19 @@
         </DataGridSelectColumn>
         <DataGridColumn Field="@nameof(Account.Name)" Caption="Name" Editable />
         <DataGridColumn Field="@nameof(Account.Number)" Caption="Number" Editable />
+        <DataGridColumn 
+            Field="@nameof(Account.Balance)"
+            Caption="Balance"
+            DisplayFormat="{0:C}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit 
+                    TValue="decimal"
+                    Value="@((decimal)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
      </DataGridColumns>
  </DataGrid>
 
@@ -76,8 +89,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _accounts = await Http.GetFromJsonAsync<List<Account>>("account") ?? new List<Account>();
-        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution") ?? new List<Institution>();
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
+        _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
     }
 
     private async Task OnRowInserted(SavedRowItem<Account, Dictionary<string, object>> e)

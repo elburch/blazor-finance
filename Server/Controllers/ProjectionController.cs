@@ -2,7 +2,7 @@
 
 namespace BlazorFinance.Server.Controllers
 {
-    public class ProjectedEarningsController : Controller
+    public class ProjectionController : Controller
     {
         public IActionResult Index()
         {
