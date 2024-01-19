@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
-namespace BlazorFinance.Shared.Helpers
+namespace BlazorFinance.Shared.Extensions
 {
     public static class EnumExtensions
     {

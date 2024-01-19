@@ -1,4 +1,4 @@
-﻿using BlazorFinance.Shared.Helpers;
+﻿using BlazorFinance.Shared.Types;
 using LiteDB;
 
 namespace BlazorFinance.Shared.Entities
