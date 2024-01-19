@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BlazorFinance.Shared.Helpers
+namespace BlazorFinance.Shared.Types
 {
     public enum IncomeType
     {
