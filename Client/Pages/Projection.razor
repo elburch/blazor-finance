@@ -1,6 +1,7 @@
 ﻿@page "/projection"
 @using BlazorFinance.Shared.Entities
-@using BlazorFinance.Shared.Helpers
+@using BlazorFinance.Shared.Extensions
+@using BlazorFinance.Shared.Types
 @using BlazorFinance.Shared.Models
 @inject HttpClient Http
 
@@ -56,7 +57,7 @@
     </Column>
     <Column>
         <LineChart @ref="_chart" TItem="decimal" />
-        <Div>Year of Retirement</Div>
+        <Div>Age</Div>
     </Column>
 </Row>      
 
@@ -68,7 +69,7 @@
     {
         CurrentAge = 35,
         RetirementAge = 67,
-        ExpirationAge = 107,
+        ExpirationAge = 100,
         AnnualInflation = 3.0M,
         SavingsContribution = 200.00M,
      };
@@ -87,8 +88,6 @@
     {
         _loading = true;
 
-
-        string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
         //int[] Labels = Enumerable.Range(_projection.CurrentAge, _projection.ExpirationAge - _projection.CurrentAge).ToArray();
 
         List<string> backgroundColors = new List<string> { 
@@ -109,37 +108,240 @@
             ChartColor.FromRgba(255, 159, 64, 1f) 
         };
 
-
-        // build labels based on # of months or years
-        // replace RandomizeData() with a recursive function to iterate timespan between today and expiration date (decrement date?)
-
+        List<Account> accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
         List<Asset>? assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
-        List<Income> income = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
-
-        // MarketValue - Income.Withdrawals += AnnualGrowth
-        List<Asset>? liquidAssets = assets.Where(t => t.Type.isLiquid()).ToList<Asset>();
-
-        // MarketValue += AnnualGrowth
-        List<Asset>? illiquidAssets = assets.Where(t => t.Type.isIlliquid()).ToList<Asset>();
-
-        // TO DO: get expenses withdrawn from an asset so we can adjust the asset balance over time
-        // NOTE: we need to add annual growth to the asset while also subtracting withdrawals
-
-        List<int> labels = new List<int>();
-        List<double> data = new List<double>();
-
-        int year = _projection.CurrentAge;
-        while(year <= _projection.ExpirationAge){
+        List<Expense> expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
+        List<Income> incomes = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
 
 
-            labels.Add(year);
-            year += 1;
+        List<string> labels = new List<string>();
+        List<decimal> data = new List<decimal>();
+        List<decimal> balance = new List<decimal>();
+        List<decimal> liquid = new List<decimal>();
+        List<decimal> illiquid = new List<decimal>();
+
+        int years = _projection.ExpirationAge - _projection.CurrentAge;
+        DateOnly today = DateOnly.FromDateTime(DateTime.Now);
+
+        foreach (var day in today.DaysUntil(today.AddYears(years)))
+        {
+            // Subtract daily expenses + inflation from account balance and/or asset market value
+            foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily)){
+                decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                foreach(var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                    account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    // Console.WriteLine($"Daily Expense of {amount} Subtracted From Account: {account.Name}, Account Balance: {account.Balance}");
+                }
+
+                foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                    asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    // Console.WriteLine($"Daily Expense of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
+                }
+            }
+
+            // Add daily incomes to account balance and/or asset market value
+            foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily)){
+                decimal amount = income.Asset?.Id > 0 && income.Account?.Id > 0 ? income.Amount / 2 : income.Amount;
+
+                foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                    account.Balance = (account.Balance + amount);
+                    // Console.WriteLine($"Daily Income of {amount} Added to Account: {account.Name}, Account Balance: {account.Balance}");
+                }
+
+                foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                    asset.MarketValue = (asset.MarketValue + amount);
+                    // Console.WriteLine($"Daily Income of {amount} Added to Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
+                }
+            }
+
+            // TODO: For each asset, add annual growth of assets (daily portion)
+
+            // TODO: For each account, Add annual growth of assets (daily portion)
+
+
+            if(day.DayOfYear == 1){
+                // Console.WriteLine($"Accounts Balance: {accounts.Select(x => x.Balance).Sum()}");
+                // Console.WriteLine($"Assets Balance: {assets.Select(x => x.MarketValue).Sum()}");
+
+                labels.Add(day.Year.ToString());
+
+                balance.Add(accounts
+                    .Select(x => x.Balance)
+                    .Sum()
+                );
+
+                liquid.Add(assets
+                    .Where(x => x.Type.isLiquid())
+                    .Select(y => y.MarketValue)
+                    .Sum()
+                );
+
+                illiquid.Add(assets
+                    .Where(x => x.Type.isIlliquid())
+                    .Select(y => y.MarketValue)
+                    .Sum()
+                );
+            }
+
+            if (day.IsWeekly()){
+                // Subtract weekly expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Weekly)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                }
+
+                // Add weekly incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Weekly)){
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                }
+            }
+
+            if (day.IsBiWeekly()){
+                // Subtract bi weekly expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.BiWeekly)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                }
+
+                // Add bi weekly incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.BiWeekly)){
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                }
+            }
+
+            if (day.IsSemiMonthly()){
+                // Subtract semi monthly expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        // Console.WriteLine($"SemiMonthly Income of {amount} Subtracted From Account: {account.Name}, Account Balance: {account.Balance}");
+                    }
+
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        // Console.WriteLine($"SemiMonthly Income of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
+                    }
+                }
+
+                // Add semi monthly incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly)){
+                    decimal amount = income.Asset?.Id > 0 && income.Account?.Id > 0 ? income.Amount / 2 : income.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance = (account.Balance + amount);
+                        // Console.WriteLine($"SemiMonthly Income of {amount} Added to Account: {account.Name}, Account Balance: {account.Balance}");
+                    }
+
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue = (asset.MarketValue + amount);
+                        // Console.WriteLine($"SemiMonthly Income of {amount} Added to Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
+                    }
+                }
+            }
+
+            if (day.IsMonthly()){
+                // Subtract monthly expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                }
+
+                // Add monthly incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly)){
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                }
+            }
+
+            if (day.IsSemiAnnually()){
+                // Subtract semi annual expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                }
+
+                // Add semi annual incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually))
+                {
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                }
+            }
+
+            if (day.IsAnnually()){
+                // Subtract annual expenses from account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Annually)){
+                    decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
+
+                    foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
+                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
+                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    }
+                }
+
+                // Add annual incomes to account balance and/or asset market value (50/50 split if both are defined)
+                foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Annually)){
+                    foreach (var account in accounts.Where(x => x.Id == income.Account?.Id)){
+                        account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                    foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id)){
+                        asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
+                    }
+                }
+            }
         }
 
-        var liquid = new LineChartDataset<decimal>
+        var balanceDataset = new LineChartDataset<decimal>
             {
-                Label = "Liquid Assets $",
-                Data = RandomizeData(),
+                Label = "Account Balance $",
+                Data = balance,
                 BackgroundColor = backgroundColors,
                 BorderColor = borderColors,
                 Fill = true,
@@ -147,10 +349,21 @@
                 CubicInterpolationMode = "monotone",
             };
 
-        var illiquid = new LineChartDataset<decimal>
+        var liquidDataset = new LineChartDataset<decimal>
+            {
+                Label = "Liquid Assets $",
+                Data =liquid,
+                BackgroundColor = backgroundColors,
+                BorderColor = borderColors,
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone",
+            };
+
+        var illiquidDataset = new LineChartDataset<decimal>
             {
                 Label = "Illiquid Assets $",
-                Data = RandomizeData(),
+                Data = illiquid,
                 BackgroundColor = backgroundColors,
                 BorderColor = borderColors,
                 Fill = true,
@@ -159,25 +372,12 @@
             };
 
         await _chart.Clear();
-        await _chart.AddLabels(Labels);
-        await _chart.AddDataSet(liquid);
-        await _chart.AddDataSet(illiquid);
+        await _chart.AddLabels(labels.ToArray());
+        await _chart.AddDataSet(balanceDataset);
+        await _chart.AddDataSet(liquidDataset);
+        await _chart.AddDataSet(illiquidDataset);
         await _chart.Update();
 
         _loading = false;
-    }
-
-    List<decimal> RandomizeData()
-    {
-        var r = new Random(DateTime.Now.Millisecond);
-
-        return new List<decimal> {
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()),
-            (decimal)(r.Next( 3, 50 ) * r.NextDouble()) 
-        };
     }
 }
