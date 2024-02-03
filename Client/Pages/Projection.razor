@@ -1,126 +1,112 @@
 ﻿@page "/projection"
+@using BlazorFinance.Client.Helpers
+@using BlazorFinance.Client.Types
 @using BlazorFinance.Shared.Entities
 @using BlazorFinance.Shared.Extensions
 @using BlazorFinance.Shared.Types
 @using BlazorFinance.Shared.Models
 @inject HttpClient Http
 
-<h3>Income Projection</h3>
+<h3>Portfolio Projection</h3>
 
 <Row>
     <Column ColumnSize="ColumnSize.Is2">
-        <Field>
-            <FieldLabel>
-                Current Age
-            </FieldLabel>
-            <FieldBody>
-                <NumericEdit TValue="int" @bind-Value="@_projection.CurrentAge" Class="projection-item" />
-            </FieldBody>
-        </Field>
-        <Field>
-            <FieldLabel>
-                Retirement Age
-            </FieldLabel>
-            <FieldBody>
-                <NumericEdit TValue="int" @bind-Value="@_projection.RetirementAge" Class="projection-item" />
-            </FieldBody>
-        </Field>
-        <Field>
-            <FieldLabel>
-                Expiration Age
-            </FieldLabel>
-            <FieldBody>
-                <NumericEdit TValue="int" @bind-Value="@_projection.ExpirationAge" Class="projection-item" />
-            </FieldBody>
-        </Field>
-        <Field>
-            <FieldLabel>
-                Annual Inflation
-            </FieldLabel>
-            <FieldBody>
-                <NumericEdit TValue="decimal" @bind-Value="@_projection.AnnualInflation" Class="projection-item" />
-            </FieldBody>
-        </Field>
-        <Field>
-            <FieldLabel>
-                Savings Contribution
-            </FieldLabel>
-            <FieldBody>
-                <NumericEdit TValue="decimal" @bind-Value="@_projection.SavingsContribution" Class="projection-item" />
-            </FieldBody>
-        </Field>
-        <Field>
-            <FieldBody>
-                <Button Clicked="@GetSavingsProjection" Class="btn-primary calc">Calculate</Button>
-            </FieldBody>
-        </Field>
+        <Blazorise.Card Padding="Padding.Is3">
+            <Field>
+                <FieldLabel>
+                    Current Age
+                </FieldLabel>
+                <FieldBody>
+                    <NumericEdit TValue="int" @bind-Value="@_model.CurrentAge" Class="projection-item" />
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>
+                    Expiration Age
+                </FieldLabel>
+                <FieldBody>
+                    <NumericEdit TValue="int" @bind-Value="@_model.ExpirationAge" Class="projection-item" />
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>
+                    Annual Inflation
+                </FieldLabel>
+                <FieldBody>
+                    <NumericEdit TValue="decimal" @bind-Value="@_model.AnnualInflation" Class="projection-item" />
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldBody>
+                    <Blazorise.Button Color="Color.Primary" Clicked="@GetSavingsProjection" Margin="Margin.Is3.FromTop">Calculate</Blazorise.Button>
+                </FieldBody>
+            </Field>
+        </Blazorise.Card>
     </Column>
     <Column>
-        <LineChart @ref="_chart" TItem="decimal" />
-        <Div>Age</Div>
+        <CurrencyChart 
+            Id="projection"
+            Style="border:1px solid rgba(0,0,0,.125); border-radius: .25em;"
+            Type="@ChartType.Line"
+            xLabel="Age"
+            yLabel="Value"
+            @ref="_chart"
+        >
+        </CurrencyChart>
     </Column>
 </Row>      
 
 
 @code {
-    private bool _loading = false;
+    private List<Account> _accounts = new List<Account>();
+    private List<Asset> _assets = new List<Asset>();
+    private List<Expense> _expenses = new List<Expense>();
+    private List<Income> _incomes = new List<Income>();
 
-    private ProjectionModel _projection = new ProjectionModel()
+    private ProjectionModel _model = new ProjectionModel()
     {
-        CurrentAge = 35,
-        RetirementAge = 67,
+        CurrentAge = 50,
         ExpirationAge = 100,
         AnnualInflation = 3.0M,
-        SavingsContribution = 200.00M,
      };
 
-    private LineChart<decimal> _chart = new LineChart<decimal>();
+    private CurrencyChart _chart = new CurrencyChart();
 
+    // private LoadingIndicator _loading = new LoadingIndicator();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender){
-            await GetSavingsProjection();
-        }
+        _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
+        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
+        _incomes = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+
+        await GetSavingsProjection();
     }
 
     private async Task GetSavingsProjection()
     {
-        _loading = true;
+        List<Account> accounts = _accounts
+            .Select(x => x.Clone())
+            .ToList();
 
-        //int[] Labels = Enumerable.Range(_projection.CurrentAge, _projection.ExpirationAge - _projection.CurrentAge).ToArray();
+        List<Asset> assets = _assets
+            .Select(x => x.Clone())
+            .ToList();
 
-        List<string> backgroundColors = new List<string> { 
-            ChartColor.FromRgba(255, 99, 132, 0.2f), 
-            ChartColor.FromRgba(54, 162, 235, 0.2f), 
-            ChartColor.FromRgba(255, 206, 86, 0.2f), 
-            ChartColor.FromRgba(75, 192, 192, 0.2f), 
-            ChartColor.FromRgba(153, 102, 255, 0.2f), 
-            ChartColor.FromRgba(255, 159, 64, 0.2f) 
-        };
+        List<Expense> expenses = _expenses
+            .Select(x => x.Clone())
+            .ToList();
 
-        List<string> borderColors = new List<string> { 
-            ChartColor.FromRgba(255, 99, 132, 1f), 
-            ChartColor.FromRgba(54, 162, 235, 1f), 
-            ChartColor.FromRgba(255, 206, 86, 1f), 
-            ChartColor.FromRgba(75, 192, 192, 1f), 
-            ChartColor.FromRgba(153, 102, 255, 1f), 
-            ChartColor.FromRgba(255, 159, 64, 1f) 
-        };
+        List<Income> incomes = _incomes
+            .Select(x => x.Clone())
+            .ToList();
 
-        List<Account> accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
-        List<Asset>? assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
-        List<Expense> expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
-        List<Income> incomes = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+        List<string> balance = new List<string>();
+        List<string> liquid = new List<string>();
+        List<string> illiquid = new List<string>();
 
-
-        List<string> labels = new List<string>();
-        List<decimal> data = new List<decimal>();
-        List<decimal> balance = new List<decimal>();
-        List<decimal> liquid = new List<decimal>();
-        List<decimal> illiquid = new List<decimal>();
-
-        int years = _projection.ExpirationAge - _projection.CurrentAge;
+        int years = _model.ExpirationAge - _model.CurrentAge;
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
 
         foreach (var day in today.DaysUntil(today.AddYears(years)))
@@ -130,12 +116,12 @@
                 decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                 foreach(var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                    account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                    account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     // Console.WriteLine($"Daily Expense of {amount} Subtracted From Account: {account.Name}, Account Balance: {account.Balance}");
                 }
 
                 foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                    asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                    asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     // Console.WriteLine($"Daily Expense of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                 }
             }
@@ -155,32 +141,40 @@
                 }
             }
 
-            // TODO: For each asset, add annual growth of assets (daily portion)
+            foreach (var account in accounts){
+                // Add daily portion of annual growth percentage to account balance
+                account.Balance += account.Balance * (decimal)((account.AnnualGrowth / 100) / 365) ;
+            }
 
-            // TODO: For each account, Add annual growth of assets (daily portion)
-
+            foreach (var asset in assets){
+                // Add daily portion of annual growth percentage to market value
+                asset.MarketValue += asset.MarketValue * (decimal)((asset.AnnualGrowth / 100) / 365);
+            }
 
             if(day.DayOfYear == 1){
                 // Console.WriteLine($"Accounts Balance: {accounts.Select(x => x.Balance).Sum()}");
                 // Console.WriteLine($"Assets Balance: {assets.Select(x => x.MarketValue).Sum()}");
 
-                labels.Add(day.Year.ToString());
+                _chart.Labels.Add((_model.CurrentAge + day.Year - today.Year).ToString());
 
                 balance.Add(accounts
                     .Select(x => x.Balance)
                     .Sum()
+                    .ToString()
                 );
 
                 liquid.Add(assets
                     .Where(x => x.Type.isLiquid())
                     .Select(y => y.MarketValue)
                     .Sum()
+                    .ToString()
                 );
 
                 illiquid.Add(assets
                     .Where(x => x.Type.isIlliquid())
                     .Select(y => y.MarketValue)
                     .Sum()
+                    .ToString()
                 );
             }
 
@@ -190,10 +184,10 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                 }
 
@@ -214,10 +208,10 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                 }
 
@@ -238,12 +232,12 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                         // Console.WriteLine($"SemiMonthly Income of {amount} Subtracted From Account: {account.Name}, Account Balance: {account.Balance}");
                     }
 
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                         // Console.WriteLine($"SemiMonthly Income of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                     }
                 }
@@ -270,10 +264,10 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                 }
 
@@ -294,10 +288,10 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                 }
 
@@ -319,10 +313,10 @@
                     decimal amount = expense.Asset?.Id > 0 && expense.Account?.Id > 0 ? expense.Amount / 2 : expense.Amount;
 
                     foreach (var account in accounts.Where(x => x.Id == expense.Account?.Id)){
-                        account.Balance -= amount + (amount * (_projection.AnnualInflation / 100));
+                        account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id)){
-                        asset.MarketValue -= amount + (amount * (_projection.AnnualInflation / 100));
+                        asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
                 }
 
@@ -338,46 +332,35 @@
             }
         }
 
-        var balanceDataset = new LineChartDataset<decimal>
+        _chart.Datasets.Add(
+            new ChartDataset
             {
                 Label = "Account Balance $",
-                Data = balance,
-                BackgroundColor = backgroundColors,
-                BorderColor = borderColors,
-                Fill = true,
-                PointRadius = 3,
-                CubicInterpolationMode = "monotone",
-            };
+                Data = balance.ToArray(),
+                BackgroundColor = "#81C78480",
+                BorderColor = "#194D33",
+            }
+        );
 
-        var liquidDataset = new LineChartDataset<decimal>
+        _chart.Datasets.Add(
+            new ChartDataset
             {
                 Label = "Liquid Assets $",
-                Data =liquid,
-                BackgroundColor = backgroundColors,
-                BorderColor = borderColors,
-                Fill = true,
-                PointRadius = 3,
-                CubicInterpolationMode = "monotone",
-            };
+                Data =liquid.ToArray(),
+                BackgroundColor = "#FF8A6580",
+                BorderColor = "#BF360C",
+            });
 
-        var illiquidDataset = new LineChartDataset<decimal>
+        _chart.Datasets.Add(
+            new ChartDataset
             {
                 Label = "Illiquid Assets $",
-                Data = illiquid,
-                BackgroundColor = backgroundColors,
-                BorderColor = borderColors,
-                Fill = true,
-                PointRadius = 3,
-                CubicInterpolationMode = "monotone",
-            };
+                Data = illiquid.ToArray(),
+                BackgroundColor = "#64B5F680",
+                BorderColor = "#0D47A1",
 
-        await _chart.Clear();
-        await _chart.AddLabels(labels.ToArray());
-        await _chart.AddDataSet(balanceDataset);
-        await _chart.AddDataSet(liquidDataset);
-        await _chart.AddDataSet(illiquidDataset);
+            });
+
         await _chart.Update();
-
-        _loading = false;
     }
 }

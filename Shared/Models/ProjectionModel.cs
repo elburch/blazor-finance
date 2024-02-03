@@ -10,12 +10,8 @@ namespace BlazorFinance.Shared.Models
     {
         public int CurrentAge { get; set; }
 
-        public int RetirementAge { get; set; }
-
         public int ExpirationAge { get; set; }
 
         public decimal AnnualInflation { get; set; }
-
-        public decimal SavingsContribution { get; set; }
     }
 }

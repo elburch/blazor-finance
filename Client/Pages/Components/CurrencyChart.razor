@@ -1,0 +1,84 @@
+﻿@using BlazorFinance.Client.Helpers
+@using BlazorFinance.Client.Types
+@inject IJSRuntime JSRuntime
+
+<canvas id="@Id" style="@Style"></canvas>
+
+@code {
+    public List<ChartDataset> Datasets { get; set; } = new List<ChartDataset>();
+
+    public List<string> Labels { get; set; } = new List<string>(); 
+
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter]
+    public ChartType Type { get; set; } = ChartType.Line;
+
+    [Parameter]
+    public string Style{ get; set; } = string.Empty;
+
+    [Parameter]
+    public string xLabel { get; set; } = string.Empty;
+
+    [Parameter]
+    public string yLabel { get; set; } = string.Empty;
+
+    public async Task Update()
+    {
+        // Create an anonymous type with Chart.js options
+        var config = new
+        {
+            Type = Type.ToString().ToLower(),
+            Data = new
+            {
+                Datasets = Datasets.ToArray(),
+                Labels = Labels.ToArray()
+            },
+            Options = new
+            {
+                Responsive = true,
+                Scales = new
+                {
+                    X = new
+                    {
+                        Title = new
+                        {
+                            Display = true,
+                            Text = xLabel,
+                            Font = new
+                            {
+                                Size = 17,
+                                Style = "bold"
+                            }
+                        }
+                    },
+                    Y = new
+                    {
+                        Title = new 
+                        {
+                            Display = true,
+                            Text = yLabel,
+                            Font = new
+                            {
+                                Size = 17,
+                                Style = "bold"
+                            }
+                        },
+                        Ticks = new
+                        {
+                            Format = new
+                            {
+                                Style = "currency",
+                                Currency = "USD",
+                                CurrencyDisplay = "symbol"
+                            }
+                        }
+                    }
+                },
+            }
+        };
+
+        await JSRuntime.InvokeVoidAsync("setup", Id, config);
+    }
+}
