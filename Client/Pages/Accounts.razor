@@ -80,6 +80,19 @@
                     ValueChanged="@( v => context.CellValue = v)" />
             </EditTemplate>
         </DataGridColumn>
+        <DataGridColumn 
+            Field="@nameof(Account.AnnualGrowth)"
+            Caption="Growth %"
+            DisplayFormat="{0:n2}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit 
+                    TValue="double"
+                    Value="@((double)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
      </DataGridColumns>
  </DataGrid>
 
