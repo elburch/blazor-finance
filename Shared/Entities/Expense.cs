@@ -33,5 +33,10 @@ namespace BlazorFinance.Shared.Entities
         public DateOnly StartingDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
         public DateOnly EndingDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+        public Expense Clone()
+        {
+            return (Expense)this.MemberwiseClone();
+        }
     }
 }

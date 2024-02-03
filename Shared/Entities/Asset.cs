@@ -35,5 +35,10 @@ namespace BlazorFinance.Shared.Entities
 
         // Timestamp of Price and Value metrics (as of)
         public DateTime SnapshotDate { get; set; } = DateTime.Now;
+
+        public Asset Clone()
+        {
+            return (Asset)this.MemberwiseClone();
+        }
     }
 }
