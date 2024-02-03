@@ -25,5 +25,10 @@ namespace BlazorFinance.Shared.Entities
         /// Annual growth as percentage
         /// </summary>
         public double AnnualGrowth { get; set; }
+
+        public Account Clone()
+        {
+            return (Account)this.MemberwiseClone();
+        }
     }
 }
