@@ -104,6 +104,18 @@
                     ValueChanged="@( v => context.CellValue = v)" />
             </EditTemplate>
         </DataGridColumn>
+        <DataGridColumn 
+            Field="@nameof(Asset.AnnualGrowth)"
+            Caption="Growth %"
+            DisplayFormat="{0:n2}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
+            <EditTemplate>
+                <NumericEdit TValue="double"
+                    Value="@((double)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
+            </EditTemplate>
+        </DataGridColumn>
         <DataGridColumn Field="@nameof(Asset.PurchaseDate)" Caption="Purchase Date" Editable />
         <DataGridColumn Field="@nameof(Asset.SnapshotDate)" Caption="Snapshot Date" Editable />
      </DataGridColumns>
