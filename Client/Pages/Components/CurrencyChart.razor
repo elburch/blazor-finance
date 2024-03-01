@@ -24,6 +24,17 @@
     [Parameter]
     public string yLabel { get; set; } = string.Empty;
 
+    public async Task Clear()
+    {
+        await Task.Run(() => {
+            Datasets.Clear();
+        });
+
+        await Task.Run(() =>{
+            Labels.Clear();
+        });
+    }
+
     public async Task Update()
     {
         // Create an anonymous type with Chart.js options

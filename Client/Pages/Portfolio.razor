@@ -1,10 +1,9 @@
 ﻿@page "/"
 @using BlazorFinance.Shared.Models
+@using System
 @inject HttpClient Http
 
 <h3>Portfolio Summary</h3>
-
-
 
 @if (Quotes == null)
 {
@@ -12,38 +11,25 @@
 }
 else
 {
-    <DataGrid TItem="StockModel" Data="@Quotes" Responsive>
-        <DataGridColumn Field="@nameof(StockModel.Symbol)" Caption="Symbol" />
-        <DataGridColumn Field="@nameof(StockModel.Name)" Caption="Name" />
-        <DataGridNumericColumn Field="@nameof(StockModel.Quote)" Caption="Market Price" />
-    </DataGrid>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Symbol</th>
-                <th>Name</th>
-                <th>MarketCap</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var Quote in Quotes)
-            {
-                <tr>
-                    <td>@Quote.Symbol</td>
-                    <td>@Quote.Name</td>
-                    <td>@Quote.MarketCap</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <Card>
+        <CardHeader>
+            Asset Snapshot
+        </CardHeader>
+        <CardBody>
+            <DataGrid TItem="StockModel" Data="@Quotes" Responsive>
+                 <DataGridColumn Field="@nameof(StockModel.Symbol)" Caption="Symbol" />
+                 <DataGridColumn Field="@nameof(StockModel.Name)" Caption="Name" />
+                 <DataGridNumericColumn Field="@nameof(StockModel.Quote)" Caption="Market Price" />
+             </DataGrid>
+        </CardBody>
+    </Card>
 }
 
- @code {
-    private List<StockModel>? Quotes;
+@code {
+    private List<StockModel> Quotes = new List<StockModel>();
 
     protected override async Task OnInitializedAsync()
     {
-        Quotes = await Http.GetFromJsonAsync<List<StockModel>>("PortfolioSummary") ?? new List<StockModel>();
+        //Quotes = await Http.GetFromJsonAsync<List<StockModel>>("portfolio") ?? new List<StockModel>();
     }
 }
