@@ -44,15 +44,21 @@
         </Blazorise.Card>
     </Column>
     <Column>
-        <CurrencyChart 
-            Id="projection"
-            Style="border:1px solid rgba(0,0,0,.125); border-radius: .25em;"
-            Type="@ChartType.Line"
-            xLabel="Age"
-            yLabel="Value"
-            @ref="_chart"
-        >
-        </CurrencyChart>
+        <Blazorise.Card Padding="Padding.Is3">
+            <LoadingOrbital
+                Style="text-align: center;"
+                LoadingText="Say Cheese"
+                IsLoading="_loading">
+            </LoadingOrbital>
+            <CurrencyChart 
+                Id="projection"
+                Type="@ChartType.Line"
+                xLabel="Age"
+                yLabel="Value"
+                @ref="_chart"
+            >
+            </CurrencyChart>
+        </Blazorise.Card>
     </Column>
 </Row>      
 
@@ -72,15 +78,21 @@
 
     private CurrencyChart _chart = new CurrencyChart();
 
-    // private LoadingIndicator _loading = new LoadingIndicator();
+    private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
         _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
         _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
         _incomes = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+        _loading = false;
 
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
         await GetSavingsProjection();
     }
 
@@ -102,6 +114,7 @@
             .Select(x => x.Clone())
             .ToList();
 
+        List<string> labels = new List<string>();
         List<string> balance = new List<string>();
         List<string> liquid = new List<string>();
         List<string> illiquid = new List<string>();
@@ -155,7 +168,7 @@
                 // Console.WriteLine($"Accounts Balance: {accounts.Select(x => x.Balance).Sum()}");
                 // Console.WriteLine($"Assets Balance: {assets.Select(x => x.MarketValue).Sum()}");
 
-                _chart.Labels.Add((_model.CurrentAge + day.Year - today.Year).ToString());
+                labels.Add((_model.CurrentAge + day.Year - today.Year).ToString());
 
                 balance.Add(accounts
                     .Select(x => x.Balance)
@@ -331,6 +344,10 @@
                 }
             }
         }
+
+        await _chart.Clear();
+
+        _chart.Labels = labels;
 
         _chart.Datasets.Add(
             new ChartDataset
