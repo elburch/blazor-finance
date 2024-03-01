@@ -25,9 +25,9 @@ namespace BlazorFinance.Server.Controllers
             // TO DO: hard-coded - need to get stock symbols from LiteDB service layer
             List<string> symbols = new List<string>() { "AAPL", "GOOG" };
 
-            //IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(symbols);
+            IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(symbols);
 
-            return new List<StockModel>(); //PrepareModel(quotes);
+            return PrepareModel(quotes);
         }
 
         internal List<StockModel> PrepareModel(IReadOnlyDictionary<string, Security> quotes)
