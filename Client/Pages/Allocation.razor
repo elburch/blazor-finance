@@ -1,64 +1,342 @@
 ﻿@page "/allocation"
+@using BlazorFinance.Client.Helpers
+@using BlazorFinance.Client.Types
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Extensions
 @using BlazorFinance.Shared.Models
+@using BlazorFinance.Shared.Types
+@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Interop
 @using System
 @inject HttpClient Http
 
 <h3>Portfolio Summary</h3>
 
-<Card>
-    <CardHeader>
-        Asset Allocation
-    </CardHeader>
+<Row>
+    <Column>
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    Assets
+                </CardTitle>
+            </CardHeader>
+            <CardBody>
+                @if (_assetsLoaded)
+                {
+                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_assetData" @ref="_assetChart" />
+                }
+            </CardBody>
+        </Card>
+    </Column>
+    <Column>
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    Income
+                </CardTitle>
+            </CardHeader>
+            <CardBody>
+                @if (_incomeLoaded)
+                {
+                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_incomeData" @ref="_incomeChart" />
+                }
+            </CardBody>
+        </Card>
+    </Column>
+    <Column>
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    Expenses
+                </CardTitle>
+            </CardHeader>
+            <CardBody>
+                @if (_expensesLoaded)
+                {
+                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_expenseData" @ref="_expenseChart" />
+                }
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
 
-    <CardBody>
-        @* <Chart @ref="pieChart" Type="ChartType.Pie" TItem="double" Options="@chartOptions" /> *@
-    </CardBody>
-</Card>
 
 @code {
-    // private Chart<double> pieChart = new Chart<double>();
-    // ChartOptions chartOptions = new() { AspectRatio = 1.5 };
-    // private string[] Labels = { "Red", "Blue", "Yellow", "Green", "Purple", "Orange" };
-    // private List<string> backgroundColors = new() { ChartColor.FromRgba(255, 99, 132, 0.2f), ChartColor.FromRgba(54, 162, 235, 0.2f), ChartColor.FromRgba(255, 206, 86, 0.2f), ChartColor.FromRgba(75, 192, 192, 0.2f), ChartColor.FromRgba(153, 102, 255, 0.2f), ChartColor.FromRgba(255, 159, 64, 0.2f) };
-    // private List<string> borderColors = new() { ChartColor.FromRgba(255, 99, 132, 1f), ChartColor.FromRgba(54, 162, 235, 1f), ChartColor.FromRgba(255, 206, 86, 1f), ChartColor.FromRgba(75, 192, 192, 1f), ChartColor.FromRgba(153, 102, 255, 1f), ChartColor.FromRgba(255, 159, 64, 1f) };
+    private List<Asset> _assets = new List<Asset>();
+    private List<Income> _income = new List<Income>();
+    private List<Expense> _expenses = new List<Expense>();
 
+    private PlotlyChart _assetChart = new PlotlyChart();
+    private PlotlyChart _incomeChart = new PlotlyChart();
+    private PlotlyChart _expenseChart = new PlotlyChart();
+
+    private IList<ITrace>? _assetData;
+    private IList<ITrace>? _incomeData;
+    private IList<ITrace>? _expenseData;
+
+    bool _assetsLoaded = false;
+    bool _incomeLoaded = false;
+    bool _expensesLoaded = false;
+
+    private Plotly.Blazor.Config _chartConfig = new Plotly.Blazor.Config
+    {
+        Responsive = true
+    };
+
+    private Plotly.Blazor.Layout _chartLayout = new Plotly.Blazor.Layout
+    {
+        Height = 400,
+        Width = 400,
+        Margin = new Plotly.Blazor.LayoutLib.Margin() { T = 0 },
+        ShowLegend = true,
+        Legend = new List<Plotly.Blazor.LayoutLib.Legend>() {
+            new Plotly.Blazor.LayoutLib.Legend { X = 0.45M, Y = -0.45M }
+        }
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        //Quotes = await Http.GetFromJsonAsync<List<StockModel>>("portfolio") ?? new List<StockModel>();
-        // await HandleRedraw(pieChart, GetPieChartDataset);
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
+        _income = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+        _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
     }
 
-    // private async Task HandleRedraw<TDataSet, TItem, TOptions, TModel>(Blazorise.Charts.BaseChart<TDataSet, TItem, TOptions, TModel> chart, Func<TDataSet> getDataSet)
-    // where TDataSet : ChartDataset<TItem>
-    // where TOptions : ChartOptions
-    // where TModel : ChartModel
-    // {
-    //     await chart.Clear();
+    protected override async Task OnParametersSetAsync()
+    {
+        await GetAssetData();
+        await GetIncomeData();
+        await GetExpenseData();
+    }
 
-    //     await chart.AddLabelsDatasetsAndUpdate(Labels, getDataSet());
-    // }
+    private async Task GetAssetData()
+    {
+        List<object> labels = new List<object>();
+        List<object> background = new List<object>();
+        List<object> values = new List<object>();
 
-    // private int pieLabel;
+        decimal sum = _assets.Sum(x => x.MarketValue);
 
-    // private PieChartDataset<double> GetPieChartDataset()
-    // {
-    //     return new()
-    //         {
-    //             Label = $"#{++pieLabel} of randoms",
-    //             Data = RandomizeData(),
-    //             BackgroundColor = backgroundColors,
-    //             BorderColor = borderColors,
-    //             BorderWidth = 1
-    //         };
-    // }
+        foreach (AssetType type in Enum.GetValues(typeof(AssetType)))
+        {
+            var balance = _assets
+                .Where(x => x.Type == type)
+                .Sum(y => y.MarketValue);
 
-    // List<double> RandomizeData() => RandomizeData(3, 50);
+            if (balance > 0)
+            {
+                labels.Add(EnumExtensions.GetDisplayName(type));
+                values.Add((balance / sum) * 100);
+                background.Add(type.ColorMap());
+            }
+        }
 
-    // List<double> RandomizeData(int min, int max)
-    // {
-    //     var rand = new Random();
+        _assetData = new List<ITrace>
+        {
+            new Pie
+            {
+                Values = values,
+                Labels = labels,
+                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+            }
+        };
 
-    //     return Enumerable.Range(0, 6).Select(x => rand.Next(min, max) * rand.NextDouble()).ToList();
-    // }
+        await Task.Run(() =>
+        {
+            _assetChart.React();
+        });
+
+        _assetsLoaded = true;
+    }
+
+    private async Task GetIncomeData()
+    {
+        List<object> labels = new List<object>();
+        List<object> background = new List<object>();
+        List<object> values = new List<object>();
+
+        DateOnly firstDayOfYear = DateOnly.FromDateTime( new DateTime(DateTime.Now.Year, 1, 1) );
+        DateOnly lastDayOfYear = DateOnly.FromDateTime( new DateTime(DateTime.Now.Year, 12, 31) );
+
+        Dictionary<IncomeType, decimal> balance = _income.Select(x => x.Type)
+            .Distinct()
+            .ToDictionary(x => x, x => 0.00M);
+
+        foreach (var day in firstDayOfYear.DaysUntil(lastDayOfYear))
+        {
+            // Add DAILY INCOME to income type balance
+            foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily))
+            {
+                balance[income.Type] = balance[income.Type] + income.Amount;
+            }
+
+            // Add WEEKLY INCOME to income type balance
+            foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && day.IsWeekly(x.StartingDate, x.Type) && x.Frequency == Frequency.Weekly))
+            {
+                balance[income.Type] = balance[income.Type] + income.Amount;
+            }
+
+            // Add BIWEEKLY INCOME to income type balance
+            foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && day.IsBiWeekly(x.StartingDate, x.Type) && x.Frequency == Frequency.BiWeekly))
+            {
+                balance[income.Type] = balance[income.Type] + income.Amount;
+            }
+
+
+            if (day.IsSemiMonthly())
+            {
+                // Add SEMI MONTHLY INCOME to income type balance
+                foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly))
+                {
+                    balance[income.Type] = balance[income.Type] + income.Amount;
+                }
+            }
+
+            if (day.IsMonthly())
+            {
+                // Add MONTHLY INCOME to income type balance
+                foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly))
+                {
+                    balance[income.Type] = balance[income.Type] + income.Amount;
+                }
+            }
+
+            if (day.IsSemiAnnually())
+            {
+                // Add SEMI ANNUAL INCOME to income type balance
+                foreach (var income in _income.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually))
+                {
+                    balance[income.Type] = balance[income.Type] + income.Amount;
+                }
+            }
+
+            // Add ANNUAL INCOME to income type balance
+            foreach (var income in _income.Where(x => x.StartingDate.Month == day.Month && x.StartingDate.Day == day.Day && x.EndingDate >= day && x.Frequency == Frequency.Annually))
+            {
+                balance[income.Type] = balance[income.Type] + income.Amount;
+            }
+        }
+
+        foreach (IncomeType type in balance.Keys)
+        {
+            if (balance[type] > 0)
+            {
+                labels.Add(EnumExtensions.GetDisplayName(type));
+                values.Add(balance[type]);
+                background.Add(type.ColorMap());
+            }
+        }
+
+        _incomeData = new List<ITrace>
+        {
+            new Pie
+            {
+                Values = values,
+                Labels = labels,
+                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+            }
+        };
+
+        await Task.Run(() =>
+        {
+            _incomeChart.React();
+        });
+
+        _incomeLoaded = true;
+    }
+
+    private async Task GetExpenseData()
+    {
+        List<object> labels = new List<object>();
+        List<object> background = new List<object>();
+        List<object> values = new List<object>();
+
+        DateOnly firstDayOfYear = DateOnly.FromDateTime(new DateTime(DateTime.Now.Year, 1, 1));
+        DateOnly lastDayOfYear = DateOnly.FromDateTime(new DateTime(DateTime.Now.Year, 12, 31));
+
+        Dictionary<ExpenseType, decimal> balance = _expenses.Select(x => x.Type)
+            .Distinct()
+            .ToDictionary(x => x, x => 0.00M);
+
+        foreach (var day in firstDayOfYear.DaysUntil(lastDayOfYear))
+        {
+            // Add DAILY expense to expense type balance
+            foreach (var expense in _expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily))
+            {
+                balance[expense.Type] = balance[expense.Type] + expense.Amount;
+            }
+
+            // Add WEEKLY expense to expense type balance
+            foreach (var expense in _expenses.Where(x => x.StartingDate.DayOfWeek == day.DayOfWeek && x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Weekly))
+            {
+                balance[expense.Type] = balance[expense.Type] + expense.Amount;
+            }
+
+            // Add BIWEEKLY expense to expense type balance
+            foreach (var expense in _expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && day.IsBiWeekly(x.StartingDate) && x.Frequency == Frequency.BiWeekly))
+            {
+                balance[expense.Type] = balance[expense.Type] + expense.Amount;
+            }
+
+
+            if (day.IsSemiMonthly())
+            {
+                // Add SEMI MONTHLY expense to expense type balance
+                foreach (var expense in _expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly))
+                {
+                    balance[expense.Type] = balance[expense.Type] + expense.Amount;
+                }
+            }
+
+            if (day.IsMonthly())
+            {
+                // Add MONTHLY expense to expense type balance
+                foreach (var expense in _expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly))
+                {
+                    balance[expense.Type] = balance[expense.Type] + expense.Amount;
+                }
+            }
+
+            if (day.IsSemiAnnually())
+            {
+                // Add SEMI ANNUAL expense to expense type balance
+                foreach (var expense in _expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually))
+                {
+                    balance[expense.Type] = balance[expense.Type] + expense.Amount;
+                }
+            }
+
+            // Add ANNUAL expense to expense type balance
+            foreach (var expense in _expenses.Where(x => x.StartingDate.Month == day.Month && x.StartingDate.Day == day.Day && x.EndingDate >= day && x.Frequency == Frequency.Annually))
+            {
+                balance[expense.Type] = balance[expense.Type] + expense.Amount;
+            }
+        }
+
+        foreach (ExpenseType type in balance.Keys)
+        {
+            if (balance[type] > 0)
+            {
+                labels.Add(EnumExtensions.GetDisplayName(type));
+                values.Add(balance[type]);
+                background.Add(type.ColorMap());
+            }
+        }
+
+        _expenseData = new List<ITrace>
+        {
+            new Pie
+            {
+                Values = values,
+                Labels = labels,
+                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+            }
+        };
+
+        await Task.Run(() =>
+        {
+            _expenseChart.React();
+        });
+
+        _expensesLoaded = true;
+    }
 }

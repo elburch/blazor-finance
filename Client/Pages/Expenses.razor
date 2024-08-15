@@ -32,6 +32,13 @@
             </DeleteCommandTemplate>
         </DataGridCommandColumn>
         <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
+        <DataGridSelectColumn Field="@nameof(Expense.Type)"
+                              Caption="Type"
+                              Data="Enum.GetValues(typeof(ExpenseType)).Cast<object>()"
+                              ValueField="(x) => (ExpenseType)x"
+                              TextField="(x) => Enum.GetName(typeof(ExpenseType), (ExpenseType)x)"
+                              Editable="true">
+        </DataGridSelectColumn>
         <DataGridSelectColumn 
             Field="@nameof(Expense.Account)"
             Caption="Pay From Account"

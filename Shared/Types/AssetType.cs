@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using BlazorFinance.Shared.Extensions;
+using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 
 namespace BlazorFinance.Shared.Types
@@ -46,6 +48,41 @@ namespace BlazorFinance.Shared.Types
         public static bool isIlliquid(this AssetType asset)
         {
             return asset >= AssetType.Collectible;
+        }
+
+        public static string ColorMap(this AssetType asset)
+        {
+            switch (asset)
+            {
+                case AssetType.None:
+                    return "#ffffff";
+                case AssetType.Stock:
+                    return "#1e001e";
+                case AssetType.Bond:
+                    return "#320032";
+                case AssetType.Cash:
+                    return "#450045";
+                case AssetType.Derivative:
+                    return "#590059";
+                case AssetType.MutualFund:
+                    return "#6c006c";
+                case AssetType.CertificateOfDeposit:
+                    return "#800080";
+                case AssetType.Commodity:
+                    return "#940094";
+                case AssetType.CryptoCurrency:
+                    return "#a700a7";
+                case AssetType.ExchangeTradedFund:
+                    return "#bb00bb";
+                case AssetType.Collectible:
+                    return "#ce00ce";
+                case AssetType.RealEstate:
+                    return "#e200e2";
+                case AssetType.StockOptions:
+                    return "#f600f6";
+                default: 
+                    return "#ffffff";
+            }
         }
     }
 }
