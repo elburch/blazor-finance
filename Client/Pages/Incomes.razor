@@ -32,6 +32,13 @@
             </DeleteCommandTemplate>
         </DataGridCommandColumn>
         <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
+        <DataGridSelectColumn Field="@nameof(Income.Type)"
+                              Caption="Type"
+                              Data="Enum.GetValues(typeof(IncomeType)).Cast<object>()"
+                              ValueField="(x) => (IncomeType)x"
+                              TextField="(x) => Enum.GetName(typeof(IncomeType), (IncomeType)x)"
+                              Editable="true">
+        </DataGridSelectColumn>
         <DataGridSelectColumn 
             Field="@nameof(Income.Institution)"
             Caption="Received From Institution"
