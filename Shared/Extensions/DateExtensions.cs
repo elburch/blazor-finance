@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualBasic;
+﻿using BlazorFinance.Shared.Types;
+using LiteDB;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -40,8 +42,49 @@ namespace BlazorFinance.Shared.Extensions
             return day.DayOfYear % 7 == 0;
         }
 
+        public static bool IsWeekly(this DateOnly day, DateOnly start, IncomeType type)
+        {
+            // Wages assume Payday Friday
+            if (type == IncomeType.Wages)
+            {
+                if (start.DayOfWeek == DayOfWeek.Friday)
+                {
+                    return Math.Abs(day.DayOfYear - start.DayOfYear) % 7 == 0;
+                }
+
+                int days = ((int)DayOfWeek.Friday - (int)start.DayOfWeek + 7) % 7;
+
+                return Math.Abs(day.DayOfYear - start.AddDays(days).DayOfYear) % 7 == 0;
+            }
+
+            return day.DayOfYear % 7 == 0;
+        }
+
         public static bool IsBiWeekly(this DateOnly day)
         {
+            return day.DayOfYear % 14 == 0;
+        }
+
+        public static bool IsBiWeekly(this DateOnly day, DateOnly start)
+        {
+            return Math.Abs(day.DayOfYear - start.DayOfYear) % 14 == 0;
+        }
+
+        public static bool IsBiWeekly(this DateOnly day, DateOnly start, IncomeType type)
+        {
+            // Wages assume Payday Friday
+            if (type == IncomeType.Wages)
+            {
+                if (start.DayOfWeek == DayOfWeek.Friday)
+                {
+                    return Math.Abs(day.DayOfYear - start.DayOfYear) % 14 == 0;
+                }
+
+                int days = ((int)DayOfWeek.Friday - (int)start.DayOfWeek + 7) % 7;
+
+                return Math.Abs(day.DayOfYear - start.AddDays(days).DayOfYear) % 14 == 0;
+            }
+
             return day.DayOfYear % 14 == 0;
         }
 
@@ -52,7 +95,7 @@ namespace BlazorFinance.Shared.Extensions
 
         public static bool IsMonthly(this DateOnly day)
         {
-            return (day.Day == 1);
+            return (day.Day == DateTime.DaysInMonth(day.Year, day.Month));
         }
 
         public static bool IsQuarterly(this DateOnly day)

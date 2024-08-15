@@ -24,6 +24,8 @@ namespace BlazorFinance.Shared.Entities
         [BsonRef("asset")]
         public Asset? Asset { get; set; } = new Asset();
 
+        public ExpenseType Type { get; set; }
+
         public string Description { get; set; } = string.Empty;
 
         public decimal Amount { get; set; }
