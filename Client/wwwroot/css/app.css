@@ -10,10 +10,37 @@ a, .btn-link {
     color: #0071c1;
 }
 
+.btn-admin-add {
+    background-color: indigo;
+    border: none;
+    border-radius: 100%;
+    color: white;
+    transition-duration: 0.4s;
+}
+
+.btn-admin-add:hover {
+    opacity: .7;
+}
+
+.btn-admin-edit {
+    color: indigo;
+    border: 0.1rem solid;
+    border-radius: 100%;
+    transition-duration: 0.4s;
+}
+
+.btn-admin-edit:hover {
+    opacity: .7;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #9333EA;
     border-color: #673AB7;
+}
+
+.btn-primary.round {
+    border-radius: 100%;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
