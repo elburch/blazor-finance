@@ -9,10 +9,11 @@
   <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap" Version="1.4.2" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.4.2" />
-    <PackageReference Include="LiteDB" Version="5.0.17" />
+    <PackageReference Include="LiteDB" Version="5.0.21" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.13" />
-    <PackageReference Include="OoplesFinance.YahooFinanceAPI" Version="1.5.0" />
-    <PackageReference Include="YahooFinanceApi" Version="2.3.1" />
+    <PackageReference Include="OoplesFinance.YahooFinanceAPI" Version="1.6.4" />
+    <PackageReference Include="Plotly.Blazor" Version="5.1.1" />
+    <PackageReference Include="YahooFinanceApi" Version="2.3.3" />
   </ItemGroup>
 
   <ItemGroup>
