@@ -18,17 +18,24 @@
           RowRemoved="@OnRowRemoved"
           Editable="true"
           ShowPager="true"
+          Style="color: indigo;"
           Responsive>
     <DataGridColumns>
          <DataGridCommandColumn>
              <NewCommandTemplate>
-                 <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
+                    <button type="button" class="btn-admin-add" title="Add" onclick="@context.Clicked">
+                        <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                    </button>
              </NewCommandTemplate>
              <EditCommandTemplate>
-                 <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
+                <button type="button" class="btn-admin-edit" title="Edit" onclick="@context.Clicked">
+                    <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                </button>
              </EditCommandTemplate>
             <DeleteCommandTemplate>
-                 <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
+                <button type="button" class="btn-primary round" title="Delete" onclick="@context.Clicked">
+                    <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                </button>
             </DeleteCommandTemplate>
          </DataGridCommandColumn>
          <DataGridColumn Field="@nameof(Institution.Id)" Caption="#" Sortable="false" />
