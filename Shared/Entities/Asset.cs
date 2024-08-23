@@ -33,6 +33,9 @@ namespace BlazorFinance.Shared.Entities
         // Asset purchase date
         public DateOnly PurchaseDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
+        // Asset sell date
+        public DateOnly SellDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
         // Timestamp of Price and Value metrics (as of)
         public DateTime SnapshotDate { get; set; } = DateTime.Now;
 
