@@ -19,14 +19,14 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#institutions">Prerequisites</a></li>
-        <li><a href="#accounts">Installation</a></li>
-        <li><a href="#assets">Installation</a></li>
-        <li><a href="#income">Installation</a></li>
-        <li><a href="#expenses">Installation</a></li>
+        <li><a href="#institutions">Institutions</a></li>
+        <li><a href="#accounts">Accounts</a></li>
+        <li><a href="#assets">Assets</a></li>
+        <li><a href="#income">Income</a></li>
+        <li><a href="#expenses">Expenses</a></li>
       </ul>
     </li>
-    <li><a href="#projections">Usage</a></li>
+    <li><a href="#projections">Projections</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#disclaimer">Disclaimer</a></li>
@@ -119,7 +119,9 @@ For Each Year In Projection
 
 ## Roadmap
 
-* Portfolio Import Tool (from file)
+* New Feature: Portfolio Import Tool (from file)
+* New Feature: Selectable/Saveable Database File
+* Feature Revision: Add Sell Date column for Assets
 
 <p>(<a href="#readme-top">back to top</a>)</p>
 
