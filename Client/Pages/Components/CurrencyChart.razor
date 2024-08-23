@@ -30,14 +30,13 @@
             Datasets.Clear();
         });
 
-        await Task.Run(() =>{
+        await Task.Run(() => {
             Labels.Clear();
         });
     }
 
     public async Task Update()
     {
-        // Create an anonymous type with Chart.js options
         var config = new
         {
             Type = Type.ToString().ToLower(),
@@ -60,20 +59,20 @@
                             Font = new
                             {
                                 Size = 17,
-                                Style = "bold"
+                                Weight = "Bold"
                             }
                         }
                     },
                     Y = new
                     {
-                        Title = new 
+                        Title = new
                         {
                             Display = true,
                             Text = yLabel,
                             Font = new
                             {
                                 Size = 17,
-                                Style = "bold"
+                                Weight = "Bold"
                             }
                         },
                         Ticks = new
