@@ -86,6 +86,8 @@ NOTE: If an Account and Asset are both associated with the same Income record, a
 ### Expenses
 Expenses can be "paid for" by an Account "withdrawal" or "selling" a portion of an Asset.
 
+TIP: Use "Debt" for big ticket purchases, such as Homes, Cars, etc.  This will ensure an accurate calculation of net worth (total assets - liabilities)
+
 * FK relationship to Account (that Expenses are "withdrawn" from)
 * FK relationship to Asset (that are sold to "pay" for Expenses)
 
