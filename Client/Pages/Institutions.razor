@@ -8,55 +8,54 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 
-<h3>Institutions</h3>
-
-<DataGrid TItem="Institution"
-          Data="@_institutions"
-          RowInserted="@OnRowInserted"
-          RowUpdated="@OnRowUpdated"
-          RowRemoving="@OnRowRemoving"
-          RowRemoved="@OnRowRemoved"
-          Editable="true"
-          ShowPager="true"
-          Style="color: indigo;"
-          Responsive>
-    <DataGridColumns>
-         <DataGridCommandColumn>
-             <NewCommandTemplate>
-                    <button type="button" class="btn-admin-add" title="Add" onclick="@context.Clicked">
+<ContentCard>
+    <h3>Institutions</h3>
+    <DataGrid TItem="Institution"
+              Data="@_institutions"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemoved"
+              Editable="true"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+            <DataGridCommandColumn>
+                <NewCommandTemplate>
+                    <button type="button" class="btn-admin" title="Add" onclick="@context.Clicked">
                         <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
                     </button>
-             </NewCommandTemplate>
-             <EditCommandTemplate>
-                <button type="button" class="btn-admin-edit" title="Edit" onclick="@context.Clicked">
-                    <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
-                </button>
-             </EditCommandTemplate>
-            <DeleteCommandTemplate>
-                <button type="button" class="btn-primary round" title="Delete" onclick="@context.Clicked">
-                    <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
-                </button>
-            </DeleteCommandTemplate>
-         </DataGridCommandColumn>
-         <DataGridColumn Field="@nameof(Institution.Id)" Caption="#" Sortable="false" />
-         <DataGridSelectColumn 
-             Field="@nameof(Institution.Type)" 
-             Caption="Type"  
-             Data="Enum.GetValues(typeof(InstitutionType)).Cast<object>()" 
-             ValueField="(x) => (InstitutionType)x"
-             TextField="(x) => Enum.GetName(typeof(InstitutionType), (InstitutionType)x)"
-             Editable
-         >
-         </DataGridSelectColumn>
-         <DataGridColumn Field="@nameof(Institution.Name)" Caption="Name" Editable />
-         <DataGridColumn Field="@nameof(Institution.SteetAddress)" Caption="Address" Editable />
-         <DataGridColumn Field="@nameof(Institution.City)" Caption="City" Editable />
-         <DataGridColumn Field="@nameof(Institution.State)" Caption="State" Editable />
-         <DataGridColumn Field="@nameof(Institution.PostalNumber)" Caption="Zip" Editable />
-         <DataGridColumn Field="@nameof(Institution.Website)" Caption="Website" Editable />
-         <DataGridColumn Field="@nameof(Institution.PhoneNumber)" Caption="Phone" Editable />
-    </DataGridColumns>
-</DataGrid>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                        <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                    </button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <button type="button" class="btn-admin" title="Delete" onclick="@context.Clicked">
+                        <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                    </button>
+                </DeleteCommandTemplate>
+            </DataGridCommandColumn>
+            <DataGridColumn Field="@nameof(Institution.Id)" Caption="#" Sortable="false" />
+            <DataGridSelectColumn Field="@nameof(Institution.Type)"
+                                  Caption="Type"
+                                  Data="Enum.GetValues(typeof(InstitutionType)).Cast<object>()"
+                                  ValueField="(x) => (InstitutionType)x"
+                                  TextField="(x) => Enum.GetName(typeof(InstitutionType), (InstitutionType)x)"
+                                                Editable>
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Institution.Name)" Caption="Name" Editable />
+             <DataGridColumn Field="@nameof(Institution.SteetAddress)" Caption="Address" Editable />
+             <DataGridColumn Field="@nameof(Institution.City)" Caption="City" Editable />
+             <DataGridColumn Field="@nameof(Institution.State)" Caption="State" Editable />
+             <DataGridColumn Field="@nameof(Institution.PostalNumber)" Caption="Zip" Editable />
+             <DataGridColumn Field="@nameof(Institution.Website)" Caption="Website" Editable />
+             <DataGridColumn Field="@nameof(Institution.PhoneNumber)" Caption="Phone" Editable />
+         </DataGridColumns>
+     </DataGrid>
+</ContentCard>
 
  @code {
     private List<Institution> _institutions = new List<Institution>();
