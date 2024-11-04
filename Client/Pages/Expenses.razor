@@ -8,110 +8,118 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 
-<h3>Expenses</h3>
-
-<DataGrid TItem="Expense"
-          Data="@_expenses"
-          RowInserted="@OnRowInserted"
-          RowUpdated="@OnRowUpdated"
-          RowRemoving="@OnRowRemoving"
-          RowRemoved="@OnRowRemoved"
-          Editable="true"
-          ShowPager="true"
-          Responsive>
-    <DataGridColumns>
-        <DataGridCommandColumn>
-            <NewCommandTemplate>
-                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
-            </NewCommandTemplate>
-            <EditCommandTemplate>
-                <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
-            </EditCommandTemplate>
-            <DeleteCommandTemplate>
-                <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
-            </DeleteCommandTemplate>
-        </DataGridCommandColumn>
-        <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
-        <DataGridSelectColumn Field="@nameof(Expense.Type)"
-                              Caption="Type"
-                              Data="Enum.GetValues(typeof(ExpenseType)).Cast<object>()"
-                              ValueField="(x) => (ExpenseType)x"
-                              TextField="(x) => Enum.GetName(typeof(ExpenseType), (ExpenseType)x)"
-                              Editable="true">
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Expense.Account)"
-            Caption="Pay From Account"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_accounts != null){
-                    @_accounts.FirstOrDefault(x => x.Id == (context as Expense).Account?.Id)?.Name;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select 
-                    TValue="int"
-                    SelectedValue="@((int)((Account)context.CellValue).Id)"
-                    SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))"
-                >
-                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                    @if (_accounts != null){
-                        foreach (var account in _accounts){
-                            <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
-                        }
+<ContentCard>
+    <h3>Expenses</h3>
+    <DataGrid TItem="Expense"
+              Data="@_expenses"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemoved"
+              Editable="true"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+            <DataGridCommandColumn>
+                <NewCommandTemplate>
+                    <button type="button" class="btn-admin" title="Add" onclick="@context.Clicked">
+                        <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                    </button>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                        <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                    </button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <button type="button" class="btn-admin" title="Delete" onclick="@context.Clicked">
+                        <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                    </button>
+                </DeleteCommandTemplate>
+            </DataGridCommandColumn>
+            <DataGridColumn Field="@nameof(Expense.Id)" Caption="#" Sortable="false" />
+            <DataGridSelectColumn Field="@nameof(Expense.Type)"
+                                  Caption="Type"
+                                  Data="Enum.GetValues(typeof(ExpenseType)).Cast<object>()"
+                                  ValueField="(x) => (ExpenseType)x"
+                                  TextField="(x) => Enum.GetName(typeof(ExpenseType), (ExpenseType)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Expense.Account)"
+                                  Caption="Pay From Account"
+                                  Editable="true">
+                <DisplayTemplate>
+                    @if (_accounts != null)
+                    {
+                        @_accounts.FirstOrDefault(x => x.Id == (context as Expense).Account?.Id)?.Name
+                        ;
                     }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Expense.Asset)"
-            Caption="Pay From Asset"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_assets != null){
-                    @_assets.FirstOrDefault(x => x.Id == (context as Expense).Asset?.Id)?.Description;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select TValue="int"
-                        SelectedValue="@((int)((Asset)context.CellValue).Id)"
-                        SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
-                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                    @if (_assets != null){
-                        foreach (var asset in _assets){
-                            <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)((Account)context.CellValue).Id)"
+                            SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
+                        <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                        @if (_accounts != null)
+                        {
+                            foreach (var account in _accounts)
+                            {
+                                <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                            }
                         }
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Expense.Asset)"
+                                  Caption="Pay From Asset"
+                                  Editable="true">
+                <DisplayTemplate>
+                    @if (_assets != null)
+                    {
+                        @_assets.FirstOrDefault(x => x.Id == (context as Expense).Asset?.Id)?.Description
+                        ;
                     }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Expense.Description)" Caption="Description" Editable />
-        <DataGridColumn 
-            Field="@nameof(Expense.Amount)" 
-            Caption="Amount" 
-            DisplayFormat="{0:C}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable
-        >
-            <EditTemplate>
-                <NumericEdit 
-                    TValue="decimal" 
-                    Value="@((decimal)context.CellValue)" 
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Expense.Frequency)"
-            Caption="Frequency"
-            Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
-            ValueField="(x) => (Frequency)x"
-            TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
-            Editable="true">
-        </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
-        <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
-     </DataGridColumns>
- </DataGrid>
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)((Asset)context.CellValue).Id)"
+                            SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
+                        <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                        @if (_assets != null)
+                        {
+                            foreach (var asset in _assets)
+                            {
+                                <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
+                            }
+                        }
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Expense.Description)" Caption="Description" Editable />
+             <DataGridColumn Field="@nameof(Expense.Amount)"
+                             Caption="Amount"
+                             DisplayFormat="{0:C}"
+                             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridSelectColumn Field="@nameof(Expense.Frequency)"
+                                  Caption="Frequency"
+                                  Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
+                                  ValueField="(x) => (Frequency)x"
+                                  TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
+             <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
+         </DataGridColumns>
+     </DataGrid>
+</ContentCard>
 
  @code {
     // Primary Entity

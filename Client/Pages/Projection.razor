@@ -7,60 +7,58 @@
 @using BlazorFinance.Shared.Models
 @inject HttpClient Http
 
-<h3>Portfolio Projection</h3>
 
-<Row>
-    <Column ColumnSize="ColumnSize.Is2">
-        <Blazorise.Card Padding="Padding.Is3">
-            <Field>
-                <FieldLabel>
-                    Current Age
-                </FieldLabel>
-                <FieldBody>
-                    <NumericEdit TValue="int" @bind-Value="@_model.CurrentAge" Class="projection-item" />
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>
-                    Expiration Age
-                </FieldLabel>
-                <FieldBody>
-                    <NumericEdit TValue="int" @bind-Value="@_model.ExpirationAge" Class="projection-item" />
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>
-                    Annual Inflation
-                </FieldLabel>
-                <FieldBody>
-                    <NumericEdit TValue="decimal" @bind-Value="@_model.AnnualInflation" Class="projection-item" />
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldBody>
-                    <Blazorise.Button Color="Color.Primary" Clicked="@GetSavingsProjection" Margin="Margin.Is3.FromTop">Calculate</Blazorise.Button>
-                </FieldBody>
-            </Field>
-        </Blazorise.Card>
-    </Column>
-    <Column>
-        <Blazorise.Card Padding="Padding.Is3">
-            <LoadingOrbital
-                Style="text-align: center;"
-                LoadingText="Say Cheese"
-                IsLoading="_loading">
-            </LoadingOrbital>
-            <CurrencyChart 
-                Id="projection"
-                Type="@ChartType.Line"
-                xLabel="Age"
-                yLabel="Value"
-                @ref="_chart"
-            >
-            </CurrencyChart>
-        </Blazorise.Card>
-    </Column>
-</Row>      
+<ContentRow>
+    <ContentCard>
+        <div style="margin-bottom:1rem;"><em>Projection Inputs</em></div>
+        <Field>
+            <FieldLabel>
+                Current Age
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="int" @bind-Value="@_model.CurrentAge" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Expiration Age
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="int" @bind-Value="@_model.ExpirationAge" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Annual Inflation
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="decimal" @bind-Value="@_model.AnnualInflation" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldBody>
+                <Blazorise.Button Color="Color.Secondary" Clicked="@GetSavingsProjection" Margin="Margin.Is3.FromTop">Calculate</Blazorise.Button>
+            </FieldBody>
+        </Field>
+    </ContentCard>
+
+    <ContentCard Height="50rem" Width="75rem">
+        <div style="margin-bottom:1rem;"><em>Portfolio Projection</em></div>
+        <LoadingOrbital
+            Style="text-align: center;"
+            LoadingText="Say Cheese"
+            IsLoading="_loading">
+        </LoadingOrbital>
+        <CurrencyChart 
+            Id="projection"
+            Type="@ChartType.Line"
+            xLabel="Age"
+            yLabel="Value"
+            @ref="_chart"
+        >
+        </CurrencyChart>
+    </ContentCard>
+</ContentRow>      
 
 
 @code {

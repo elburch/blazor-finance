@@ -1,7 +1,32 @@
 ﻿@page "/positions"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Models
+@using BlazorFinance.Shared.Types
+@inject HttpClient Http
 
-<h3>Positions</h3>
+<ContentCard>
+    <em>Positions</em>
+    <DataGrid TItem="StockModel"
+              Data="@_model"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+             <DataGridColumn Field="@nameof(StockModel.Name)" Caption="Name" Editable />
+             <DataGridColumn Field="@nameof(StockModel.Symbol)" Caption="Symbol" Editable />
+             <DataGridColumn Field="@nameof(StockModel.Quote)" Caption="Quote" DisplayFormat="{0:C}" Editable />
+             <DataGridColumn Field="@nameof(StockModel.Shares)" Caption="Shares" Editable />
+             <DataGridColumn Field="@nameof(StockModel.MarketValue)" Caption="Market Value" DisplayFormat="{0:C}" Editable />
+         </DataGridColumns>
+     </DataGrid>
+ </ContentCard>
+
 
 @code {
+    private List<StockModel> _model = new List<StockModel>();
 
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await Http.GetFromJsonAsync<List<StockModel>>("position/read") ?? new List<StockModel>();
+    }
 }

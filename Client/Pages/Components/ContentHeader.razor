@@ -1,0 +1,14 @@
+﻿
+<div class="content-header">
+    <div class ="col1">
+        @ChildContent
+    </div>
+    <div class="col2">
+        <div class="content-logo"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

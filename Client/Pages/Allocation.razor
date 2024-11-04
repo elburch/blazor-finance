@@ -10,55 +10,32 @@
 @using System
 @inject HttpClient Http
 
-<h3>Portfolio Summary</h3>
-
-<Row>
-    <Column>
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    Assets
-                </CardTitle>
-            </CardHeader>
-            <CardBody>
-                @if (_assetsLoaded)
-                {
-                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_assetData" @ref="_assetChart" />
-                }
-            </CardBody>
-        </Card>
-    </Column>
-    <Column>
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    Income
-                </CardTitle>
-            </CardHeader>
-            <CardBody>
-                @if (_incomeLoaded)
-                {
-                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_incomeData" @ref="_incomeChart" />
-                }
-            </CardBody>
-        </Card>
-    </Column>
-    <Column>
-        <Card>
-            <CardHeader>
-                <CardTitle>
-                    Expenses
-                </CardTitle>
-            </CardHeader>
-            <CardBody>
-                @if (_expensesLoaded)
-                {
-                    <PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="_expenseData" @ref="_expenseChart" />
-                }
-            </CardBody>
-        </Card>
-    </Column>
-</Row>
+<ContentRow>
+    <ContentColumn>
+        @if (_assetsLoaded)
+        {
+            <ContentCard>
+                <ContentPieChart ChartTitle="Assets" ChartRef="@_assetChart" ChartData="@_assetData"></ContentPieChart>
+            </ContentCard>
+        }
+    </ContentColumn>
+    <ContentColumn>
+        @if (_incomeLoaded)
+        {
+            <ContentCard>
+                <ContentPieChart ChartTitle="Income" ChartRef="@_incomeChart" ChartData="@_incomeData"></ContentPieChart>
+            </ContentCard>
+        }
+    </ContentColumn>
+    <ContentColumn>
+        @if (_expensesLoaded)
+        {
+            <ContentCard>
+                <ContentPieChart ChartTitle="Expenses" ChartRef="@_expenseChart" ChartData="@_expenseData"></ContentPieChart>
+            </ContentCard>
+        }
+    </ContentColumn>
+</ContentRow>
 
 
 @code {
@@ -77,22 +54,6 @@
     bool _assetsLoaded = false;
     bool _incomeLoaded = false;
     bool _expensesLoaded = false;
-
-    private Plotly.Blazor.Config _chartConfig = new Plotly.Blazor.Config
-    {
-        Responsive = true
-    };
-
-    private Plotly.Blazor.Layout _chartLayout = new Plotly.Blazor.Layout
-    {
-        Height = 400,
-        Width = 400,
-        Margin = new Plotly.Blazor.LayoutLib.Margin() { T = 0 },
-        ShowLegend = true,
-        Legend = new List<Plotly.Blazor.LayoutLib.Legend>() {
-            new Plotly.Blazor.LayoutLib.Legend { X = 0.45M, Y = -0.45M }
-        }
-    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,7 +97,7 @@
             {
                 Values = values,
                 Labels = labels,
-                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+                // Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
             }
         };
 
@@ -232,7 +193,7 @@
             {
                 Values = values,
                 Labels = labels,
-                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+                //Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
             }
         };
 
@@ -328,7 +289,7 @@
             {
                 Values = values,
                 Labels = labels,
-                Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
+                //Marker = new Plotly.Blazor.Traces.PieLib.Marker(){ Colors = background }
             }
         };
 
