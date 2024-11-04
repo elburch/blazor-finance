@@ -1,0 +1,6 @@
+﻿.content-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: .75rem;
+}

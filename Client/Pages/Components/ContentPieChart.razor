@@ -1,0 +1,39 @@
+﻿@using Plotly.Blazor.LayoutLib
+@using Plotly.Blazor.Interop
+
+<PlotlyChart @bind-Config="_chartConfig" @bind-Layout="_chartLayout" @bind-Data="@ChartData" @ref="@ChartRef" />
+
+@code {
+    [Parameter]
+    public string? ChartTitle { get; set; }
+
+    [Parameter]
+    public object? ChartRef { get; set; }
+
+    [Parameter]
+    public IList<ITrace>? ChartData { get; set; }
+
+
+    private Plotly.Blazor.Config _chartConfig = new Plotly.Blazor.Config
+        {
+            Responsive = true,
+        };
+
+    private Plotly.Blazor.Layout _chartLayout = new Plotly.Blazor.Layout
+        {
+            PaperBgColor = "rgba(0,0,0,0)",
+            Height = 400,
+            Width = 400,
+            Font = new Font
+            {
+                Color = "#ffffff",
+                Style = Plotly.Blazor.LayoutLib.FontLib.StyleEnum.Italic
+            },
+            ShowLegend = true,
+        };
+
+    protected override void OnParametersSet()
+    {
+        _chartLayout.Title = new Title { Text = ChartTitle };
+    }
+}

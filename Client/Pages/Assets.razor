@@ -7,120 +7,122 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 
-<h3>Assets</h3>
-
-<DataGrid TItem="Asset"
-          Data="@_assets"
-          RowInserted="@OnRowInserted"
-          RowUpdated="@OnRowUpdated"
-          RowRemoving="@OnRowRemoving"
-          RowRemoved="@OnRowRemoved"
-          Editable="true"
-          ShowPager="true"
-          Responsive>
-    <DataGridColumns>
-        <DataGridCommandColumn>
-            <NewCommandTemplate>
-                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
-            </NewCommandTemplate>
-            <EditCommandTemplate>
-                <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
-            </EditCommandTemplate>
-            <DeleteCommandTemplate>
-                <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
-            </DeleteCommandTemplate>
-        </DataGridCommandColumn>
-        <DataGridColumn Field="@nameof(Asset.Id)" Caption="#" Sortable="false" />
-        <DataGridSelectColumn Field="@nameof(Asset.Type)"
-                              Caption="Type"
-                              Data="Enum.GetValues(typeof(AssetType)).Cast<object>()"
-                              ValueField="(x) => (AssetType)x"
-                              TextField="(x) => Enum.GetName(typeof(AssetType), (AssetType)x)"
-                              Editable="true">
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Asset.AccountId)"
-            Caption="Account"
-            Data="@_accounts"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_accounts != null){
-                    @_accounts.Where(i => i.Id == (context as Asset).AccountId).FirstOrDefault()?.Name;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select 
-                    TValue="int"
-                    SelectedValue="@((int)( context.CellValue ))"
-                    SelectedValueChanged="@(( v ) => context.CellValue = v)"
-                >
-                    @if (_accounts != null){
-                        foreach (var account in _accounts){
-                            <SelectItem Value="@(account.Id)">@(account.Name)</SelectItem>
-                        }
+<ContentCard>
+    <h3>Assets</h3>
+    <DataGrid TItem="Asset"
+              Data="@_assets"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemoved"
+              Editable="true"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+            <DataGridCommandColumn>
+                <NewCommandTemplate>
+                    <button type="button" class="btn-admin" title="Add" onclick="@context.Clicked">
+                        <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                    </button>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                        <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                    </button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <button type="button" class="btn-admin" title="Delete" onclick="@context.Clicked">
+                        <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                    </button>
+                </DeleteCommandTemplate>
+            </DataGridCommandColumn>
+            <DataGridColumn Field="@nameof(Asset.Id)" Caption="#" Sortable="false" />
+            <DataGridSelectColumn Field="@nameof(Asset.Type)"
+                                  Caption="Type"
+                                  Data="Enum.GetValues(typeof(AssetType)).Cast<object>()"
+                                  ValueField="(x) => (AssetType)x"
+                                  TextField="(x) => Enum.GetName(typeof(AssetType), (AssetType)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Asset.AccountId)"
+                                  Caption="Account"
+                                  Data="@_accounts"
+                                  Editable="true">
+                <DisplayTemplate>
+                    @if (_accounts != null)
+                    {
+                        @_accounts.Where(i => i.Id == (context as Asset).AccountId).FirstOrDefault()?.Name
+                        ;
                     }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
-        <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
-        <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Quantity" Editable />
-        <DataGridColumn 
-            Field="@nameof(Asset.Price)"
-            Caption="Price"
-            DisplayFormat="{0:C}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable>
-            <EditTemplate>
-                <NumericEdit 
-                    TValue="decimal"
-                    Value="@((decimal)context.CellValue)"
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridColumn 
-            Field="@nameof(Asset.CostBasis)"
-            Caption="Cost Basis"
-            DisplayFormat="{0:C}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable>
-            <EditTemplate>
-                <NumericEdit 
-                    TValue="decimal"
-                    Value="@((decimal)context.CellValue)"
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridColumn 
-            Field="@nameof(Asset.MarketValue)"
-            Caption="Market Value"
-            DisplayFormat="{0:C}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable>
-            <EditTemplate>
-                <NumericEdit 
-                    TValue="decimal"
-                    Value="@((decimal)context.CellValue)"
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridColumn 
-            Field="@nameof(Asset.AnnualGrowth)"
-            Caption="Growth %"
-            DisplayFormat="{0:n2}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable>
-            <EditTemplate>
-                <NumericEdit TValue="double"
-                    Value="@((double)context.CellValue)"
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridColumn Field="@nameof(Asset.PurchaseDate)" Caption="Purchase Date" Editable />
-         <DataGridColumn Field="@nameof(Asset.SellDate)" Caption="Sell Date" Editable />
-        <DataGridColumn Field="@nameof(Asset.SnapshotDate)" Caption="Snapshot Date" Editable />
-     </DataGridColumns>
- </DataGrid>
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)( context.CellValue ))"
+                            SelectedValueChanged="@(( v ) => context.CellValue = v)">
+                        @if (_accounts != null)
+                        {
+                            foreach (var account in _accounts)
+                            {
+                                <SelectItem Value="@(account.Id)">@(account.Name)</SelectItem>
+                            }
+                        }
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
+             <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
+             <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Quantity" Editable />
+             <DataGridColumn Field="@nameof(Asset.Price)"
+                             Caption="Price"
+                             DisplayFormat="{0:C}"
+                             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn Field="@nameof(Asset.CostBasis)"
+                            Caption="Cost Basis"
+                            DisplayFormat="{0:C}"
+                            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn Field="@nameof(Asset.MarketValue)"
+                            Caption="Market Value"
+                            DisplayFormat="{0:C}"
+                            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn Field="@nameof(Asset.AnnualGrowth)"
+                            Caption="Growth %"
+                            DisplayFormat="{0:n2}"
+                            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="double"
+                                 Value="@((double)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn Field="@nameof(Asset.PurchaseDate)" Caption="Purchase Date" Editable />
+             <DataGridColumn Field="@nameof(Asset.SellDate)" Caption="Sell Date" Editable />
+             <DataGridColumn Field="@nameof(Asset.SnapshotDate)" Caption="Snapshot Date" Editable />
+         </DataGridColumns>
+     </DataGrid>
+</ContentCard>
 
  @code {
     private List<Account> _accounts = new List<Account>();

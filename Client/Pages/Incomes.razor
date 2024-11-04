@@ -8,136 +8,143 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 
-<h3>Income</h3>
-
-<DataGrid TItem="Income"
-          Data="@_income"
-          RowInserted="@OnRowInserted"
-          RowUpdated="@OnRowUpdated"
-          RowRemoving="@OnRowRemoving"
-          RowRemoved="@OnRowRemoved"
-          Editable="true"
-          ShowPager="true"
-          Responsive>
-    <DataGridColumns>
-        <DataGridCommandColumn>
-            <NewCommandTemplate>
-                <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
-            </NewCommandTemplate>
-            <EditCommandTemplate>
-                <Button Color="Color.Warning" Clicked="@context.Clicked">Edit</Button>
-            </EditCommandTemplate>
-            <DeleteCommandTemplate>
-                <Button Color="Color.Danger" Clicked="@context.Clicked">Delete</Button>
-            </DeleteCommandTemplate>
-        </DataGridCommandColumn>
-        <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
-        <DataGridSelectColumn Field="@nameof(Income.Type)"
-                              Caption="Type"
-                              Data="Enum.GetValues(typeof(IncomeType)).Cast<object>()"
-                              ValueField="(x) => (IncomeType)x"
-                              TextField="(x) => Enum.GetName(typeof(IncomeType), (IncomeType)x)"
-                              Editable="true">
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Income.Institution)"
-            Caption="Received From Institution"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_institutions != null){
-                    @_institutions.FirstOrDefault(x => x.Id == (context as Income).Institution?.Id)?.Name;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select 
-                    TValue="int"
-                    SelectedValue="@((int)((Institution)context.CellValue).Id)"
-                    SelectedValueChanged="@( v => context.CellValue = _institutions.FirstOrDefault(x => x.Id == v))">
-                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                    @if (_institutions != null){
-                        foreach (var institution in _institutions){
-                            <SelectItem TValue="int" Value="@(institution.Id)">@(institution.Name)</SelectItem>
-                        }
+<ContentCard>
+    <h3>Income</h3>
+    <DataGrid TItem="Income"
+              Data="@_income"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemoved"
+              Editable="true"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+            <DataGridCommandColumn>
+                <NewCommandTemplate>
+                    <button type="button" class="btn-admin" title="Add" onclick="@context.Clicked">
+                        <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                    </button>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                        <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                    </button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <button type="button" class="btn-admin" title="Delete" onclick="@context.Clicked">
+                        <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                    </button>
+                </DeleteCommandTemplate>
+            </DataGridCommandColumn>
+            <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
+            <DataGridSelectColumn Field="@nameof(Income.Type)"
+                                  Caption="Type"
+                                  Data="Enum.GetValues(typeof(IncomeType)).Cast<object>()"
+                                  ValueField="(x) => (IncomeType)x"
+                                  TextField="(x) => Enum.GetName(typeof(IncomeType), (IncomeType)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Income.Institution)"
+                                  Caption="Received From Institution"
+                                  Editable="true">
+                <DisplayTemplate>
+                    @if (_institutions != null)
+                    {
+                        @_institutions.FirstOrDefault(x => x.Id == (context as Income).Institution?.Id)?.Name
+                        ;
                     }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Income.Account)"
-            Caption="Deposit To Account"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_accounts != null)
-                {
-                    @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name
-                    ;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select TValue="int"
-                        SelectedValue="@((int)((Account)context.CellValue).Id)"
-                        SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
-                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)((Institution)context.CellValue).Id)"
+                            SelectedValueChanged="@( v => context.CellValue = _institutions.FirstOrDefault(x => x.Id == v))">
+                        <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                        @if (_institutions != null)
+                        {
+                            foreach (var institution in _institutions)
+                            {
+                                <SelectItem TValue="int" Value="@(institution.Id)">@(institution.Name)</SelectItem>
+                            }
+                        }
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Income.Account)"
+                                  Caption="Deposit To Account"
+                                  Editable="true">
+                <DisplayTemplate>
                     @if (_accounts != null)
                     {
-                        foreach (var account in _accounts)
+                        @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name
+                        ;
+                    }
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)((Account)context.CellValue).Id)"
+                            SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
+                        <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                        @if (_accounts != null)
                         {
-                            <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                            foreach (var account in _accounts)
+                            {
+                                <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
+                            }
                         }
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridSelectColumn Field="@nameof(Income.Asset)"
+                                  Caption="Invest In Asset"
+                                  Editable="true">
+                <DisplayTemplate>
+                    @if (_assets != null)
+                    {
+                        @_assets.FirstOrDefault(x => x.Id == (context as Income).Asset?.Id)?.Description
+                        ;
                     }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Income.Asset)"
-            Caption="Invest In Asset"
-            Editable="true">
-            <DisplayTemplate>
-                @if (_assets != null){
-                    @_assets.FirstOrDefault(x => x.Id == (context as Income).Asset?.Id)?.Description;
-                }
-            </DisplayTemplate>
-            <EditTemplate>
-                <Select 
-                    TValue="int"
-                    SelectedValue="@((int)((Asset)context.CellValue).Id)"
-                    SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
-                    <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                    @if (_assets != null){
-                        foreach (var asset in _assets){
-                            <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
+                </DisplayTemplate>
+                <EditTemplate>
+                    <Select TValue="int"
+                            SelectedValue="@((int)((Asset)context.CellValue).Id)"
+                            SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
+                        <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
+                        @if (_assets != null)
+                        {
+                            foreach (var asset in _assets)
+                            {
+                                <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
+                            }
                         }
-                    }
-                </Select>
-            </EditTemplate>
-        </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Income.Description)" Caption="Description" Editable />
-        <DataGridColumn 
-            Field="@nameof(Income.Amount)"
-            Caption="Amount"
-            DisplayFormat="{0:C}"
-            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-            Editable
-        >
-            <EditTemplate>
-                <NumericEdit 
-                    TValue="decimal"
-                    Value="@((decimal)context.CellValue)"
-                    ValueChanged="@( v => context.CellValue = v)" />
-            </EditTemplate>
-        </DataGridColumn>
-        <DataGridSelectColumn 
-            Field="@nameof(Income.Frequency)"
-            Caption="Frequency"
-            Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
-            ValueField="(x) => (Frequency)x"
-            TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
-            Editable="true">
-        </DataGridSelectColumn>
-        <DataGridColumn Field="@nameof(Income.StartingDate)" Caption="Starting Date" Editable />
-        <DataGridColumn Field="@nameof(Income.EndingDate)" Caption="Ending Date" Editable />
-     </DataGridColumns>
- </DataGrid>
+                    </Select>
+                </EditTemplate>
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Income.Description)" Caption="Description" Editable />
+             <DataGridColumn Field="@nameof(Income.Amount)"
+                             Caption="Amount"
+                             DisplayFormat="{0:C}"
+                             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                                    Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridSelectColumn Field="@nameof(Income.Frequency)"
+                                  Caption="Frequency"
+                                  Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
+                                  ValueField="(x) => (Frequency)x"
+                                  TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Income.StartingDate)" Caption="Starting Date" Editable />
+             <DataGridColumn Field="@nameof(Income.EndingDate)" Caption="Ending Date" Editable />
+         </DataGridColumns>
+     </DataGrid>
+</ContentCard>
 
  @code {
     // Primary Entity

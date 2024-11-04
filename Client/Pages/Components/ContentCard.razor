@@ -1,0 +1,18 @@
+﻿<div class="content-card" style="--height:@Height; --width:@Width;">@ChildContent</div>
+<style>
+    .content-card {
+        min-height: var(--height);
+        min-width: var(--width);
+    }
+</style>
+
+@code {
+    [Parameter] 
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public string Height { get; set; } = "25rem";
+
+    [Parameter]
+    public string Width { get; set; } = "25rem";
+}
