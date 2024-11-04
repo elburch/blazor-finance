@@ -24,6 +24,8 @@
 
         public decimal MarketCap { get; set; }
 
+        public decimal MarketValue { get; set; }
+
         public decimal? PricePerEarningRatio { get; set; }
 
         public bool IsCategorized { get; set; }
