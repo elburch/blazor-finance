@@ -10,7 +10,7 @@
 @inject IToastService ToastService
 
 <ContentRow>
-    <ContentCard>
+    <ContentCard Width="35rem">
         <em>Net Worth Breakdown</em>
         <ContentRow>
             @(string.Format("{0:C}", _net3))
@@ -45,11 +45,39 @@
             IsLoading="_loading">
         </LoadingOrbital>
         <CurrencyChart 
-            Id="projection"
+            Id="worth-trend"
             Type="@ChartType.Line"
             xLabel="Year"
             yLabel="Value"
-            @ref="_chart">
+            @ref="_worth">
+        </CurrencyChart>
+    </ContentCard>
+</ContentRow>
+<ContentRow>
+    <ContentCard Width="35rem">
+        <em>Income Trend</em>
+        <LoadingOrbital Style="text-align: center;"
+                        LoadingText="Wait For it..."
+                        IsLoading="_loading">
+        </LoadingOrbital>
+        <CurrencyChart Id="income-trend"
+                       Type="@ChartType.Line"
+                       xLabel="Year"
+                       yLabel="Value"
+                       @ref="_income">
+        </CurrencyChart>
+    </ContentCard>
+    <ContentCard Width="35rem">
+        <em>Expense Trend</em>
+        <LoadingOrbital Style="text-align: center;"
+                        LoadingText="Wait For it..."
+                        IsLoading="_loading">
+        </LoadingOrbital>
+        <CurrencyChart Id="expense-trend"
+                       Type="@ChartType.Line"
+                       xLabel="Year"
+                       yLabel="Value"
+                       @ref="_expense">
         </CurrencyChart>
     </ContentCard>
 </ContentRow>
@@ -74,7 +102,9 @@
         AnnualInflation = 3.0M,
     };
 
-    private CurrencyChart _chart = new CurrencyChart();
+    private CurrencyChart _expense = new CurrencyChart();
+    private CurrencyChart _income = new CurrencyChart();
+    private CurrencyChart _worth = new CurrencyChart();
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,10 +146,10 @@
             .Select(x => x.MarketValue)
             .Sum();
 
-       _net2 = _expenses
-            .Where(x => x.Type == ExpenseType.Debt)
-            .Select(x => x.Amount)
-            .Sum();
+        _net2 = _expenses
+             .Where(x => x.Type == ExpenseType.Debt)
+             .Select(x => x.Amount)
+             .Sum();
 
         _net3 = (_net0 + _net1) - _net2;
     }
@@ -144,7 +174,12 @@
 
         List<string> labels = new List<string>();
 
-        List<string> balance = new List<string>();
+        List<string> eBalance = new List<string>();
+        List<string> iBalance = new List<string>();
+        List<string> wBalance = new List<string>();
+
+        decimal eAnnual = 0.00m;
+        decimal iAnnual = 0.00m;
 
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
 
@@ -166,6 +201,8 @@
                     asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     // Console.WriteLine($"Daily Expense of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                 }
+
+                eAnnual += expense.Amount;
             }
 
             // Add daily incomes to account balance and/or asset market value
@@ -184,6 +221,8 @@
                     asset.MarketValue = (asset.MarketValue + amount);
                     // Console.WriteLine($"Daily Income of {amount} Added to Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                 }
+
+                iAnnual += income.Amount;
             }
 
             foreach (var account in accounts)
@@ -216,7 +255,12 @@
                     .Select(x => x.MarketValue)
                     .Sum();
 
-                balance.Add(Convert.ToString(net0 + net1));
+                eBalance.Add(eAnnual.ToString());
+                iBalance.Add(iAnnual.ToString());
+                wBalance.Add(Convert.ToString(net0 + net1));
+
+                eAnnual = 0.00m;
+                iAnnual = 0.00m;
             }
 
             if (day.IsWeekly())
@@ -230,10 +274,13 @@
                     {
                         account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id))
                     {
                         asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
+                    eAnnual += expense.Amount;
                 }
 
                 // Add weekly incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -243,10 +290,13 @@
                     {
                         account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id))
                     {
                         asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
+                    iAnnual += income.Amount;
                 }
             }
 
@@ -261,10 +311,13 @@
                     {
                         account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id))
                     {
                         asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
+                    eAnnual += expense.Amount;
                 }
 
                 // Add bi weekly incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -274,10 +327,13 @@
                     {
                         account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id))
                     {
                         asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
+                    iAnnual += income.Amount;
                 }
             }
 
@@ -299,6 +355,8 @@
                         asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                         // Console.WriteLine($"SemiMonthly Income of {amount} Subtracted From Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                     }
+
+                    eAnnual += expense.Amount;
                 }
 
                 // Add semi monthly incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -317,6 +375,8 @@
                         asset.MarketValue = (asset.MarketValue + amount);
                         // Console.WriteLine($"SemiMonthly Income of {amount} Added to Asset: {asset.Description}, Asset Market Value: {asset.MarketValue}");
                     }
+
+                    iAnnual += income.Amount;
                 }
             }
 
@@ -331,10 +391,13 @@
                     {
                         account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id))
                     {
                         asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
+                    eAnnual += expense.Amount;
                 }
 
                 // Add monthly incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -344,10 +407,13 @@
                     {
                         account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id))
                     {
                         asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
+                    iAnnual += income.Amount;
                 }
             }
 
@@ -362,10 +428,13 @@
                     {
                         account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id))
                     {
                         asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                     }
+
+                    eAnnual += expense.Amount;
                 }
 
                 // Add semi annual incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -375,10 +444,13 @@
                     {
                         account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
                     foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id))
                     {
                         asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
                     }
+
+                    iAnnual += income.Amount;
                 }
             }
 
@@ -391,10 +463,13 @@
                 {
                     account.Balance -= amount + (amount * (_model.AnnualInflation / 100));
                 }
+
                 foreach (var asset in assets.Where(x => x.Id == expense.Asset?.Id))
                 {
                     asset.MarketValue -= amount + (amount * (_model.AnnualInflation / 100));
                 }
+
+                eAnnual += expense.Amount;
             }
 
             // Add annual incomes to account balance and/or asset market value (50/50 split if both are defined)
@@ -404,27 +479,66 @@
                 {
                     account.Balance += income.Asset?.Id == 0 ? income.Amount : income.Amount / 2;
                 }
+
                 foreach (var asset in assets.Where(x => x.Id == income.Asset?.Id))
                 {
                     asset.MarketValue += income.Account?.Id == 0 ? income.Amount : income.Amount / 2;
                 }
+
+                iAnnual += income.Amount;
             }
         }
 
-        await _chart.Clear();
+        await _expense.Clear();
 
-        _chart.Labels = labels;
+        _expense.Labels = labels;
 
-        _chart.Datasets.Add(
+        _expense.Datasets.Add(
             new ChartDataset
                 {
-                    Label = "Net Worth $",
-                    Data = balance.ToArray(),
+                    Label = "Expenses $",
+                    Data = eBalance.ToArray(),
                     BackgroundColor = new string[] { "#81C78480" },
                     BorderColor = "#194D33",
                 }
         );
 
-        await _chart.Update();
+        await _expense.Update();
+
+        //---------------------------------------
+
+        await _income.Clear();
+
+        _income.Labels = labels;
+
+        _income.Datasets.Add(
+            new ChartDataset
+                {
+                    Label = "Income $",
+                    Data = iBalance.ToArray(),
+                    BackgroundColor = new string[] { "#81C78480" },
+                    BorderColor = "#194D33",
+                }
+        );
+
+        await _income.Update();
+
+        //---------------------------------------
+
+        await _worth.Clear();
+
+        _worth.Labels = labels;
+
+        _worth.Datasets.Add(
+            new ChartDataset
+                {
+                    Label = "Net Worth $",
+                    Data = wBalance.ToArray(),
+                    BackgroundColor = new string[] { "#81C78480" },
+                    BorderColor = "#194D33",
+                }
+        );
+
+        await _worth.Update();
     }
 }
