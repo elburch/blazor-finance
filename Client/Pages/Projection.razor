@@ -37,12 +37,14 @@
         </Field>
         <Field>
             <FieldBody>
-                <Blazorise.Button Color="Color.Secondary" Clicked="@GetSavingsProjection" Margin="Margin.Is3.FromTop">Calculate</Blazorise.Button>
+                <button type="button" class="btn-client" title="Calculate" @onclick="GetSavingsProjection">
+                    <i class="oi bi-calculator" style="font-size: 1.2rem;"></i>
+                </button>
             </FieldBody>
         </Field>
     </ContentCard>
 
-    <ContentCard Height="50rem" Width="75rem">
+    <ContentCard Height="40rem" Width="60rem">
         <div style="margin-bottom:1rem;"><em>Portfolio Projection</em></div>
         <LoadingOrbital
             Style="text-align: center;"
