@@ -1,11 +1,6 @@
 ﻿using BlazorFinance.Shared.Entities;
 using LiteDB;
-using LiteDB.Engine;
-using System.Collections.Generic;
-using System;
 using System.Linq.Expressions;
-using System.Xml.Linq;
-using System.Xml;
 
 namespace BlazorFinance.Server.Data
 {
@@ -192,6 +187,23 @@ namespace BlazorFinance.Server.Data
             {
                 throw new ApplicationException(
                     $"An exception occurred while attempting to update {nameof(TEntity)} record {entity.Id}.  Message: {ex.Message}"
+                );
+            }
+        }
+
+        public async Task<int> Update(IEnumerable<TEntity> entities)
+        {
+            try
+            {
+                using LiteDatabase db = new LiteDatabase(_dbpath);
+                return await Task.Run(() => db
+                    .GetCollection<TEntity>()
+                    .Update(entities));
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(
+                    $"An exception occurred while attempting to batch update {nameof(TEntity)} records.  Message: {ex.Message}"
                 );
             }
         }

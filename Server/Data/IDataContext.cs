@@ -18,6 +18,8 @@ namespace BlazorFinance.Server.Data
 
         public Task<bool> Update(TEntity entity);
 
+        public Task<int> Update(IEnumerable<TEntity> entities);
+
         public Task<bool> Delete(BsonValue id);
     }
 }

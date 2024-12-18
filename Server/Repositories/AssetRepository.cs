@@ -64,6 +64,16 @@ namespace BlazorFinance.Server.Repositories
         }
 
         /// <summary>
+        /// Updates a list of Asset objects
+        /// </summary>
+        /// <param name="assets"></param>
+        /// <returns></returns>
+        public async Task<int> UpdateAssetsAsync(List<Asset> assets)
+        {
+            return await _context.Update(assets);
+        }
+
+        /// <summary>
         /// Deletes an Asset object
         /// </summary>
         /// <param name="id"></param>
