@@ -7,6 +7,7 @@
 @using BlazorFinance.Shared.Types
 @using System
 @inject HttpClient Http
+@inject IToastService ToastService
 
 <ContentRow>
     <ContentCard>
@@ -77,11 +78,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await UpdateStaleQuotes();
+
         _loading = true;
+
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
         _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
         _expenses = await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>();
         _incomes = await Http.GetFromJsonAsync<List<Income>>("income/read") ?? new List<Income>();
+
         _loading = false;
     }
 
@@ -89,6 +94,16 @@
     {
         GetNetWorth();
         await GetNetWorthProjection();
+    }
+
+    protected async Task UpdateStaleQuotes()
+    {
+        HttpResponseMessage? response = await Http.GetAsync($"quote/update");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            ToastService.ShowToast(ToastLevel.Success, $"Asset market values have been updated.");
+        else if (response.StatusCode > System.Net.HttpStatusCode.MultipleChoices)
+            ToastService.ShowToast(ToastLevel.Error, $"Asset market values were not updated. Response Code: {response.StatusCode}");
     }
 
     private void GetNetWorth()
