@@ -1,6 +1,7 @@
 ﻿using BlazorFinance.Server.Repositories;
 using BlazorFinance.Server.Services;
 using BlazorFinance.Shared.Entities;
+using BlazorFinance.Shared.Types;
 using Microsoft.AspNetCore.Mvc;
 using YahooFinanceApi;
 
@@ -38,6 +39,7 @@ namespace BlazorFinance.Server.Controllers
                     .First();
 
                 if (asset != null){
+                    asset.Price = (decimal)quote.Value.RegularMarketPrice;
                     asset.MarketValue = (decimal)asset.Quantity * (decimal)quote.Value.RegularMarketPrice;
                     asset.SnapshotDate = DateTime.Now;
                 }
