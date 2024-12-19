@@ -6,27 +6,27 @@
 
 <ContentCard>
     <em>Positions</em>
-    <DataGrid TItem="StockModel"
-              Data="@_model"
+    <DataGrid TItem="Asset"
+              Data="@_assets"
               ShowPager="true"
               Style="color: white;"
               Responsive>
         <DataGridColumns>
-             <DataGridColumn Field="@nameof(StockModel.Name)" Caption="Name" Editable />
-             <DataGridColumn Field="@nameof(StockModel.Symbol)" Caption="Symbol" Editable />
-             <DataGridColumn Field="@nameof(StockModel.Quote)" Caption="Quote" DisplayFormat="{0:C}" Editable />
-             <DataGridColumn Field="@nameof(StockModel.Shares)" Caption="Shares" Editable />
-             <DataGridColumn Field="@nameof(StockModel.MarketValue)" Caption="Market Value" DisplayFormat="{0:C}" Editable />
-         </DataGridColumns>
+             <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
+             <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
+             <DataGridColumn Field="@nameof(Asset.Price)" Caption="Quote" DisplayFormat="{0:C}" Editable />
+             <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Shares" Editable />
+             <DataGridColumn Field="@nameof(Asset.MarketValue)" Caption="Market Value" DisplayFormat="{0:C}" Editable />
+        </DataGridColumns>
      </DataGrid>
  </ContentCard>
 
 
-@code {
-    private List<StockModel> _model = new List<StockModel>();
+ @code {
+    private List<Asset> _assets = new List<Asset>();
 
     protected override async Task OnInitializedAsync()
     {
-        _model = await Http.GetFromJsonAsync<List<StockModel>>("position/read") ?? new List<StockModel>();
+        _assets = await Http.GetFromJsonAsync<List<Asset>>("position/read") ?? new List<Asset>();
     }
 }
