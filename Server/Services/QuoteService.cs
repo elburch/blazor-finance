@@ -18,7 +18,8 @@ namespace BlazorFinance.Server.Services
                     Field.Symbol, 
                     Field.LongName,
                     Field.RegularMarketPrice, 
-                    Field.FiftyTwoWeekHigh)
+                    Field.FiftyTwoWeekHigh,
+                    Field.TrailingAnnualDividendRate)
                 .QueryAsync();
 
             return securities;

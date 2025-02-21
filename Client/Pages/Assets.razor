@@ -106,6 +106,17 @@
                                  ValueChanged="@( v => context.CellValue = v)" />
                 </EditTemplate>
             </DataGridColumn>
+            <DataGridColumn Field="@nameof(Asset.DividendRate)"
+                            Caption="Dividend Rate"
+                            DisplayFormat="{0:C}"
+                            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+                            Editable>
+                <EditTemplate>
+                    <NumericEdit TValue="decimal"
+                                 Value="@((decimal)context.CellValue)"
+                                 ValueChanged="@( v => context.CellValue = v)" />
+                </EditTemplate>
+            </DataGridColumn>
             <DataGridColumn Field="@nameof(Asset.AnnualGrowth)"
                             Caption="Growth %"
                             DisplayFormat="{0:n2}"
