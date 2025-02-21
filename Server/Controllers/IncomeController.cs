@@ -17,7 +17,7 @@ namespace BlazorFinance.Server.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateIncome(
-            [Bind("Institution", "Account", "Asset", "Description", "Amount", "Frequency", "StartingDate", "EndingDate")] Income income
+            [Bind("Description", "Amount", "Frequency", "StartingDate", "EndingDate")] Income income
         )
         {
             if (income == null){
