@@ -17,7 +17,7 @@ namespace BlazorFinance.Server.Controllers
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateExpense(
-            [Bind("Institution", "Description", "Amount", "Frequency", "StartingDate", "EndingDate")] Expense expense
+            [Bind("Description", "Amount", "Frequency", "StartingDate", "EndingDate")] Expense expense
         )
         {
             if (expense == null){
