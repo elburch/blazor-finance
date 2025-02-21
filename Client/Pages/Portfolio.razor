@@ -21,10 +21,28 @@
         <ContentRow>
             <ContentColumn>
                 <ContentRow>
-                    @(string.Format("{0:C}", (_net0 + _net1)))
+                    @(string.Format("{0:C}", _net1a))
                 </ContentRow>
                 <ContentRow>
-                    <em>Assets</em>
+                    <em>Liquid Assets</em>
+                </ContentRow>
+            </ContentColumn>
+            <ContentColumn>
+                <ContentRow>
+                    @(string.Format("{0:C}", _net1b))
+                </ContentRow>
+                <ContentRow>
+                    <em>Illiquid Assets</em>
+                </ContentRow>
+            </ContentColumn>
+        </ContentRow>
+        <ContentRow>
+            <ContentColumn>
+                <ContentRow>
+                    @(string.Format("{0:C}", _net0))
+                </ContentRow>
+                <ContentRow>
+                    <em>Accounts</em>
                 </ContentRow>
             </ContentColumn>
             <ContentColumn>
@@ -90,7 +108,8 @@
     private List<Income> _incomes = new List<Income>();
 
     private decimal _net0 = 0;
-    private decimal _net1 = 0;
+    private decimal _net1a = 0;
+    private decimal _net1b = 0;
     private decimal _net2 = 0;
     private decimal _net3 = 0;
 
@@ -142,7 +161,13 @@
             .Select(x => x.Balance)
             .Sum();
 
-        _net1 = _assets
+        _net1a = _assets
+            .Where(x => x.Type.isLiquid())
+            .Select(x => x.MarketValue)
+            .Sum();
+
+        _net1b = _assets
+            .Where(x => x.Type.isIlliquid())
             .Select(x => x.MarketValue)
             .Sum();
 
@@ -151,7 +176,7 @@
              .Select(x => x.Amount)
              .Sum();
 
-        _net3 = (_net0 + _net1) - _net2;
+        _net3 = (_net0 + _net1a + _net1b) - _net2;
     }
 
     private async Task GetNetWorthProjection()
