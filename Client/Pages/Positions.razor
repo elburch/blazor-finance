@@ -7,15 +7,23 @@
 <ContentCard>
     <em>Positions</em>
     <DataGrid TItem="Asset"
-              Data="@_assets"
-              ShowPager="true"
-              Style="color: white;"
-              Responsive>
+    Data="@_assets"
+    ShowPager="true"
+    Style="color: white;"
+    Responsive>
         <DataGridColumns>
-             <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
-             <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
-             <DataGridColumn Field="@nameof(Asset.Price)" Caption="Quote" DisplayFormat="{0:C}" Editable />
-             <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Shares" Editable />
+            <DataGridColumn Field="@nameof(Asset.Description)" Caption="Description" Editable />
+            <DataGridColumn Field="@nameof(Asset.Symbol)" Caption="Symbol" Editable />
+            <DataGridColumn Field="@nameof(Asset.Price)" Caption="Quote" DisplayFormat="{0:C}" Editable />
+            <DataGridColumn Field="@nameof(Asset.Quantity)" Caption="Shares" Editable />
+            <DataGridColumn Field="@nameof(Asset.DividendRate)" Caption="Dividend Rate" DisplayFormat="{0:C}" Editable />
+            <DataGridColumn Caption="Annual Dividend" Editable>
+                <DisplayTemplate>
+                    @{
+                        @(((decimal)context.Quantity * context.DividendRate).ToString("C"))
+                     }
+                 </DisplayTemplate>
+             </DataGridColumn>
              <DataGridColumn Field="@nameof(Asset.MarketValue)" Caption="Market Value" DisplayFormat="{0:C}" Editable />
         </DataGridColumns>
      </DataGrid>

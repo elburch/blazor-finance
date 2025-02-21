@@ -241,6 +241,11 @@
             {
                 // Console.WriteLine($"Accounts Balance: {accounts.Select(x => x.Balance).Sum()}");
                 // Console.WriteLine($"Assets Balance: {assets.Select(x => x.MarketValue).Sum()}");
+                foreach (var asset in assets.Where(x => x.PurchaseDate <= day && day <= x.SellDate && x.DividendRate > 0)){
+                    // Add annual dividend yield to market value (reinvested)
+                    asset.MarketValue += (decimal)asset.Quantity * asset.DividendRate;
+                }
+
                 decimal net0 = 0;
                 decimal net1 = 0;
 
