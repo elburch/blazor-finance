@@ -24,6 +24,9 @@ namespace BlazorFinance.Shared.Entities
         // Quantity * Price
         public decimal MarketValue { get; set; }
 
+        // Trailing Annual Dividend Rate
+        public decimal DividendRate { get; set; }
+
         // Market Value at time of purchase
         public decimal CostBasis { get; set; }
 
