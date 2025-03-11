@@ -16,7 +16,7 @@ namespace BlazorFinance.Shared.Entities
 
         public string Description { get; set; } = string.Empty;
 
-        public double Quantity { get; set; }
+        public decimal Quantity { get; set; }
 
         // Share Price
         public decimal Price { get; set; }
