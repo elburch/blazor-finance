@@ -15,12 +15,14 @@ builder.Services.AddScoped<IDataContext<Asset>, DataContext<Asset>>();
 builder.Services.AddScoped<IDataContext<Expense>, DataContext<Expense>>();
 builder.Services.AddScoped<IDataContext<Income>, DataContext<Income>>();
 builder.Services.AddScoped<IDataContext<Institution>, DataContext<Institution>>();
+builder.Services.AddScoped<IDataContext<Template>, DataContext<Template>>();
 // Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAssetRepository, AssetRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<IIncomeRepository, IncomeRepository>();
 builder.Services.AddScoped<IInstitutionRepository, InstitutionRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 // Services
 builder.Services.AddScoped<IQuoteService, QuoteService>();
 

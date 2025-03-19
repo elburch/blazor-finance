@@ -1,0 +1,114 @@
+﻿@page "/templates"
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Types
+@using System.Net
+@using System.Text
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject Blazored.Toast.Services.IToastService ToastService
+
+<ContentCard>
+    <h3>Templates</h3>
+    <DataGrid TItem="Template"
+              Data="@_templates"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemoved"
+              Editable="true"
+              ShowPager="true"
+              Style="color: white;"
+              Responsive>
+        <DataGridColumns>
+            <DataGridCommandColumn>
+                <NewCommandTemplate>
+                    <button type="button" class="btn-admin" title="Add" onclick="@context.Clicked">
+                        <i class="oi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                    </button>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                        <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
+                    </button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <button type="button" class="btn-admin" title="Delete" onclick="@context.Clicked">
+                        <i class="oi bi-trash" style="font-size: 1.2rem;"></i>
+                    </button>
+                </DeleteCommandTemplate>
+            </DataGridCommandColumn>
+            <DataGridColumn Field="@nameof(Template.Id)" Caption="#" Sortable="false" />
+            <DataGridSelectColumn Field="@nameof(Template.Type)"
+                                  Caption="Type"
+                                  Data="Enum.GetValues(typeof(AssetType)).Cast<object>()"
+                                  ValueField="(x) => (AssetType)x"
+                                  TextField="(x) => Enum.GetName(typeof(AssetType), (AssetType)x)"
+                                  Editable="true">
+            </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Template.Name)" Caption="Name" Editable />
+            <DataGridColumn Field="@nameof(Template.TickerLabel)" Caption="Ticker Label" Editable />
+            <DataGridColumn Field="@nameof(Template.DescriptionLabel)" Caption="Description Label" Editable />
+            <DataGridColumn Field="@nameof(Template.SharesLabel)" Caption="Shares Label" Editable />
+            <DataGridColumn Field="@nameof(Template.PriceLabel)" Caption="Price Label" Editable />
+        </DataGridColumns>
+    </DataGrid>
+</ContentCard>
+
+@code {
+    private List<Template> _templates = new List<Template>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _templates = await Http.GetFromJsonAsync<List<Template>>("template/read") ?? new List<Template>();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<Template, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("template/create", e.NewItem);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Template? template = await response.Content.ReadFromJsonAsync<Template>();
+            if (template != null)
+            {
+                e.OldItem.Id = template.Id;
+            }
+
+            ToastService.ShowToast(ToastLevel.Success, $"Template Created: Id {template?.Id}");
+        }
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Template Was Not Created. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<Template, Dictionary<string, object>> e)
+    {
+        HttpResponseMessage? response = await Http.PutAsJsonAsync($"template/update/{e.NewItem.Id}", e.NewItem,
+            new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                }
+        );
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Template Id {e.NewItem.Id} Updated");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Template Id {e.NewItem.Id} Was Not Updated. Response Code: {response.StatusCode}");
+    }
+
+    private async Task OnRowRemoving(CancellableRowChange<Template> e)
+    {
+        // Dialogs return true when confirming delete prompt, false when canceled (use negation to sync with args)
+        e.Cancel = !await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the Template?");
+    }
+
+    private async Task OnRowRemoved(Template template)
+    {
+        HttpResponseMessage? response = await Http.DeleteAsync($"template/delete/{template.Id}");
+
+        if (response.IsSuccessStatusCode)
+            ToastService.ShowToast(ToastLevel.Success, $"Template Id {template.Id} Deleted");
+        else
+            ToastService.ShowToast(ToastLevel.Error, $"Template Id {template.Id} Was Not Deleted. Response Code: {response.StatusCode}");
+    }
+}

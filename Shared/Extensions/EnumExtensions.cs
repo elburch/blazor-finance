@@ -13,5 +13,10 @@ namespace BlazorFinance.Shared.Extensions
                             .GetCustomAttribute<DisplayAttribute>()?
                             .GetName() ?? string.Empty;
         }
+
+        public static T[] GetEnumValues<T>() where T : System.Enum
+        {
+            return (T[])Enum.GetValues(typeof(T));
+        }
     }
 }

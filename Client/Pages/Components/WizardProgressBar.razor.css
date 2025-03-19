@@ -1,0 +1,34 @@
+﻿.step-container {
+    margin-top: 1.5rem;
+}
+
+.circle-container {
+    margin-top: -1rem;
+}
+
+.step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #65379B;
+    line-height: 30px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+    .step-circle.step-reached {
+        color: white;
+        background-color: #65379B;
+    }
+
+    .step-circle.step-pending {
+        color: #65379B;
+        background-color: white;
+    }
+
+.progress-bar-purple {
+    background-color: #65379B !important;
+}

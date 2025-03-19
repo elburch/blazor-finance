@@ -4,6 +4,8 @@ namespace BlazorFinance.Shared.Types
 {
     public enum InstitutionType
     {
+        [Display(Name = "None Selected")]
+        NoneSelected = -1,
         [Display(Name = "Retail Bank")]
         RetailBank,
         [Display(Name = "Commercial Bank")]

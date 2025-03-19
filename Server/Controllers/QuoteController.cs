@@ -41,8 +41,12 @@ namespace BlazorFinance.Server.Controllers
                 if (asset != null){
                     asset.Price = (decimal)quote.Value.RegularMarketPrice;
                     asset.MarketValue = (decimal)asset.Quantity * (decimal)quote.Value.RegularMarketPrice;
-                    asset.DividendRate = (decimal)quote.Value.TrailingAnnualDividendRate;
                     asset.SnapshotDate = DateTime.Now;
+
+                    dynamic? rate;
+                    if (quote.Value.Fields.TryGetValue("TrailingAnnualDividendRate", out rate)){
+                        asset.DividendRate = (decimal)rate;
+                    }
                 }
             }
 
