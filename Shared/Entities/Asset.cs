@@ -34,13 +34,13 @@ namespace BlazorFinance.Shared.Entities
         public double AnnualGrowth { get; set; }
 
         // Asset purchase date
-        public DateOnly PurchaseDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateOnly PurchaseDate { get; set; }
 
         // Asset sell date
-        public DateOnly SellDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateOnly SellDate { get; set; } = DateOnly.MaxValue;
 
         // Timestamp of Price and Value metrics (as of)
-        public DateTime SnapshotDate { get; set; } = DateTime.Now;
+        public DateTime SnapshotDate { get; set; } = DateTime.MinValue;
 
         public Asset Clone()
         {

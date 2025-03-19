@@ -1,4 +1,4 @@
-<a name="readme-top"></a>
+<a name="readme-top"></a>{#readme-top}
 
 <div align="center">
   <h3>Blazor Finance</h3>
@@ -24,6 +24,7 @@
         <li><a href="#assets">Assets</a></li>
         <li><a href="#income">Income</a></li>
         <li><a href="#expenses">Expenses</a></li>
+        <li><a href="#templates">Templates</a></li>
       </ul>
     </li>
     <li><a href="#projections">Projections</a></li>
@@ -55,7 +56,7 @@ The application is explicitly intended for use on a local workstation, without a
 
 <!-- GETTING STARTED -->
 ## Getting Started
-The relationship of financial entities is important for creating an accurate projection of retirement,  They have a hierarchical releationship and should generally be created in the following order:
+The relationship of financial entities is important for creating an accurate projection of retirement.  They have a hierarchical releationship and should generally be created in the following order:
 
 ### Institutions
 Insitutions are the base entity used to create a portfolio.  It is possible to receive Income directly from an Institution, but for the most part they are intended to be a parent for Accounts.
@@ -93,6 +94,19 @@ TIP: Use "Debt" for big ticket purchases, such as Homes, Cars, etc.  This will e
 
 NOTE: If an Account and Asset are both associated with the same Expense record, a 50% allocation will be assumed.  For different allocation percentages, it is prefereable to create separate records with each Expense Asset or Account receiving a specific dollar ammount.
 
+### Templates
+Templates are used to identify the ordinal position of columns in brokerage portfolio import files (.csv format).  
+
+Each brokerage seems to use their own export format.  Templates are used to identify the Ticker, Description, Shares, and Price columns in the export file.
+
+TIP: All positions selected on import will adopt the Asset Type defined in the portfolio.  Multiple templates can be defined for each brokerage file (one for each Asset Type).
+
+For example:
+
+Type                Name                    Ticker Label        Description Label       Shares Label        Price Label
+ExchangeTradedFund  Charles Schwab ETF      Symbol              Description             Qty (Quantity)      Price
+Stock               Charles Schwab Stock    Symbol              Description             Qty (Quantity)      Price
+
 <p>(<a href="#readme-top">back to top</a>)</p>
 
 ## Projections
@@ -121,9 +135,10 @@ For Each Year In Projection
 
 ## Roadmap
 
-* New Feature: Portfolio Import Tool (from file)
+* Feature Refinement: Validation and Error Handling for Portfolio Import Tool (from csv file)
+* Project Framework: Add automated test framework/project
+* New Feature: Portfolio Import Tool (from Quicken file)
 * New Feature: Selectable/Saveable Database File
-* Feature Revision: Add Sell Date column for Assets
 
 <p>(<a href="#readme-top">back to top</a>)</p>
 

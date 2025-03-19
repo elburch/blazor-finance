@@ -208,6 +208,23 @@ namespace BlazorFinance.Server.Data
             }
         }
 
+        public async Task<bool> Upsert(TEntity entity)
+        {
+            try
+            {
+                using LiteDatabase db = new LiteDatabase(_dbpath);
+                return await Task.Run(() => db
+                    .GetCollection<TEntity>()
+                    .Upsert(entity));
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException(
+                    $"An exception occurred while attempting to upsert the {nameof(TEntity)} record.  Message: {ex.Message}"
+                );
+            }
+        }
+
         public async Task<bool> Delete(BsonValue Id)
         {
             try

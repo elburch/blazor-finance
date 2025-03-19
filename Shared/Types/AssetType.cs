@@ -1,7 +1,4 @@
-﻿using BlazorFinance.Shared.Extensions;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing;
-using System.Runtime.CompilerServices;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BlazorFinance.Shared.Types
 {

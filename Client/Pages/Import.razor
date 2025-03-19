@@ -1,0 +1,471 @@
+﻿@page "/import"
+@using System.ComponentModel
+@using System.Text
+@using BlazorFinance.Client.Helpers
+@using BlazorFinance.Client.Models
+@using BlazorFinance.Shared.Entities
+@using BlazorFinance.Shared.Extensions
+@using BlazorFinance.Shared.Types
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject Blazored.Toast.Services.IToastService ToastService
+
+<ContentCard Height="100%" Width="100%">
+    <div class="form-container">
+        <h3>Import</h3>
+
+        <p>Use this dialog to import a portfolio from your brokerage</p>
+
+        <WizardProgressBar steps=@Steps @ref=Bar OnClick="HandleBarClick"></WizardProgressBar>
+
+        <EditForm Model=@Model OnSubmit=@HandleFormSubmit>
+            <div class="@(Step == 1 ? "show" : "hide")">
+                <!-- Step 1 form fields here -->
+                <div class="mb-3 w-50">
+                    <label for="select-brokerage" class="form-label">Select Brokerage File</label>
+                    <InputFile OnChange="HandleFileUpload" id="select-brokerage" class="form-control" />
+                </div>
+            </div>
+
+            <div class="@(Step == 2 ? "show" : "hide")">
+                <!-- Step 2 form fields here -->
+                <p class="form-label">Select Content Header Row</p>
+                <div class="grid">
+                    <QuickGrid Items="@Model.AssetList.AsQueryable()">
+                        <TemplateColumn Context="row">
+                            <input class="form-check-input" type="radio" name="header" value="@Model.AssetList.IndexOf(row)" @onchange="HandleHeaderSelection"/>
+                        </TemplateColumn>
+                        @{
+                            foreach (int col in Enumerable.Range(0, Columns))
+                            {
+                                <PropertyColumn Property="@(fc => fc.Asset[col])" />
+                            }
+                        }
+                    </QuickGrid>
+                </div>
+            </div>
+
+            <div class="@(Step == 3 ? "show" : "hide")">
+                <!-- Step 3 form fields here -->
+                <p class="form-label">Select Import Position Rows</p>
+                <div class="grid">
+                    <QuickGrid Items="@Model.AssetList.AsQueryable()">
+                        <TemplateColumn Context="content">
+                            <InputCheckbox class="form-check-input" @bind-Value="content.Position"></InputCheckbox>
+                        </TemplateColumn>
+                        @{
+                            foreach (int col in Enumerable.Range(0, Columns))
+                            {
+                                <PropertyColumn Property="@(fc => fc.Asset[col])" />
+                            }
+                        }
+                    </QuickGrid>
+                </div>
+            </div>
+
+            <div class="@(Step == 4 ? "show" : "hide")">
+                <!-- Step 4 form fields here -->
+                <div class="d-grid gap-2 w-50">
+                    <label for="select-institution" class="form-label p-2">Select Import Institution (Or Add New)</label>
+                    <InputSelect id="select-institution" class="form-select mb-3" @bind-Value="Model.Institution.Id" disabled="@(Model.Institution.AddNew)">
+                        <option hidden value="0">Select a Value</option>
+                        @foreach (var Institution in Institutions)
+                        {
+                            <option value="@Institution.Id">@Institution.Name</option>
+                        }
+                    </InputSelect>
+                    <div class="form-check form-switch">
+                        <InputCheckbox id="new-institution" class="form-check-input" @bind-Value="Model.Institution.AddNew"></InputCheckbox>
+                        <label class="form-check-label" for="new-institution">Add a new Institution</label>
+                    </div>
+                    <label for="institution-type">Type:</label>
+                    <InputSelect id="institution-type" class="form-select" @bind-Value="Model.Institution.Type" placeholder="Select a Value" disabled="@(!Model.Institution.AddNew)">
+                        <option hidden value="@InstitutionType.NoneSelected">Select a Value</option>
+                        @foreach (InstitutionType type in EnumExtensions.GetEnumValues<InstitutionType>().Where(x => (int)x >= 0))
+                        {
+                            <option value="@type">@EnumExtensions.GetDisplayName(type)</option>
+                        }
+                    </InputSelect>
+                    <label for="create-institution-name">Name:</label>
+                    <InputText id="create-institution-name" class="form-control" @bind-Value="Model.Institution.Name" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-address">Street Address:</label>
+                    <InputText id="create-institution-address" class="form-control" @bind-Value="Model.Institution.StreetAddress" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-city">City:</label>
+                    <InputText id="create-institution-city" class="form-control" @bind-Value="Model.Institution.City" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-state">State:</label>
+                    <InputText id="create-institution-state" class="form-control" @bind-Value="Model.Institution.State" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-postal">Postal Number:</label>
+                    <InputText id="create-institution-postal" class="form-control" @bind-Value="Model.Institution.PostalNumber" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-phone">Phone Number:</label>
+                    <InputText id="create-institution-phone" class="form-control" @bind-Value="Model.Institution.PhoneNumber" disabled="@(!Model.Institution.AddNew)"></InputText>
+                    <label for="create-institution-website">Website:</label>
+                    <InputText id="create-institution-website" class="form-control" @bind-Value="Model.Institution.Website" disabled="@(!Model.Institution.AddNew)"></InputText>
+                </div>
+            </div>
+
+            <div class="@(Step == 5 ? "show" : "hide")">
+                <!-- Step 5 form fields here -->
+                <div class="d-grid gap-2 w-50">
+                    <label for="select-account" class="form-label">Select Import Account (Or Add New)</label>
+                    <InputSelect id="select-account" class="form-select mb-3" @bind-Value="Model.Account.Id">
+                        <option hidden value="0">Select a Value</option>
+                        @foreach (var Account in AccountsFiltered)
+                        {
+                            <option value="@Account.Id">@Account.Name</option>
+                        }
+                    </InputSelect>
+                    <div class="form-check form-switch">
+                        <InputCheckbox id="new-account" class="form-check-input" @bind-Value="Model.Account.AddNew"></InputCheckbox>
+                        <label class="form-check-label" for="new-account">Add a new Account</label>
+                    </div>
+                    <label for="account-type">Type:</label>
+                    <InputSelect id="account-type" class="form-select" @bind-Value="Model.Account.Type" placeholder="Select a Value" disabled="@(!Model.Account.AddNew)">
+                        <option hidden value="@AccountType.None">Select a Value</option>
+                        @foreach (AccountType type in EnumExtensions.GetEnumValues<AccountType>().Where(x => (int)x > 0))
+                        {
+                            <option value="@type">@EnumExtensions.GetDisplayName(type)</option>
+                        }
+                    </InputSelect>
+                    <label for="create_account_name">Name:</label>
+                    <InputText id="create_account_name" class="form-control" @bind-Value="Model.Account.Name" disabled="@(!Model.Account.AddNew)"></InputText>
+                    <label for="create_account_address">Number:</label>
+                    <InputText id="create_account_address" class="form-control" @bind-Value="Model.Account.Number" disabled="@(!Model.Account.AddNew)"></InputText>
+                </div>
+            </div>
+
+            <div class="@(Step == 6 ? "show" : "hide")">
+                <!-- Step 6 form fields here -->
+                <div class="d-grid gap-2 w-50">
+                    <label for="select-template" class="form-label">Select Import Template (Or Add New)</label>
+                    <InputSelect id="select-template" class="form-select mb-3" @bind-Value="Model.Template.Id">
+                        <option hidden value="0">Select a Value</option>
+                        @foreach (var Template in Templates)
+                        {
+                            <option value="@Template.Id">@Template.Name</option>
+                        }
+                    </InputSelect>
+                    <div class="form-check form-switch">
+                        <InputCheckbox id="new-template" class="form-check-input" @bind-Value="Model.Template.AddNew"></InputCheckbox>
+                        <label class="form-check-label" for="new-template">Add a new Template</label>
+                    </div>
+                    <label for="template-type">Type:</label>
+                    <InputSelect id="template-type" class="form-select" @bind-Value="Model.Template.Type" placeholder="Select a Value" disabled="@(!Model.Template.AddNew)">
+                        <option hidden value="@AssetType.None">Select a Value</option>
+                        @foreach (AssetType type in EnumExtensions.GetEnumValues<AssetType>().Where(x => (int)x > 0))
+                        {
+                            <option value="@type">@EnumExtensions.GetDisplayName(type)</option>
+                        }
+                    </InputSelect>
+                    <label for="create_template_name">Name:</label>
+                    <InputText id="create_template_name" class="form-control" @bind-Value="Model.Template.Name" disabled="@(!Model.Template.AddNew)"></InputText>
+                    <label for="create_template_ticker">Ticker Label:</label>
+                    <InputText id="create_template_ticker" class="form-control" @bind-Value="Model.Template.TickerLabel" disabled="@(!Model.Template.AddNew)"></InputText>
+                    <label for="create_description_ticker">Decription Label:</label>
+                    <InputText id="create_description_ticker" class="form-control" @bind-Value="Model.Template.DescriptionLabel" disabled="@(!Model.Template.AddNew)"></InputText>
+                    <label for="create_shares_ticker">Shares Label:</label>
+                    <InputText id="create_shares_ticker" class="form-control" @bind-Value="Model.Template.SharesLabel" disabled="@(!Model.Template.AddNew)"></InputText>
+                    <label for="create_price_ticker">Price Label:</label>
+                    <InputText id="create_price_ticker" class="form-control" @bind-Value="Model.Template.PriceLabel" disabled="@(!Model.Template.AddNew)"></InputText>
+                </div>
+
+
+
+            </div>
+
+            <div class="@(Step == 7 ? "show" : "hide")">
+                <!-- Step 7 form fields here -->
+                <div class="grid mb-3">
+                    <p class="form-label text-decoration-underline">Header Row</p>
+                    <QuickGrid Items="@Model.AssetList.Where(fc => fc.Header == true).AsQueryable()">
+                        @{
+                            foreach (int col in Enumerable.Range(0, Columns))
+                            {
+                                <PropertyColumn Property="@(fc => fc.Asset[col])" />
+                            }
+                        }
+                    </QuickGrid>
+                </div>
+                <div class="grid mb-3">
+                    <p class="form-label text-decoration-underline">Position Rows</p>
+                    <QuickGrid Items="@Model.AssetList.Where(fc => fc.Position == true).AsQueryable()">
+                        @{
+                            foreach (int col in Enumerable.Range(0, Columns))
+                            {
+                                <PropertyColumn Property="@(fc => fc.Asset[col])" />
+                            }
+                        }
+                    </QuickGrid>
+                </div>
+                <div class="mb-3">
+                    <p class="form-label mb-3 text-decoration-underline">Institution</p>
+                    <p>Name: @Model.Institution.Name</p>
+                    <p>Address: @Model.Institution.StreetAddress</p>
+                    <p>City: @Model.Institution.City</p>
+                    <p>State: @Model.Institution.City</p>
+                    <p>Postal Number: @Model.Institution.City</p>
+                    <p>Phone Number: @Model.Institution.State</p>
+                    <p>Website: @Model.Institution.Website</p>
+                </div>
+                <div class="mb-3">
+                    <p class="form-label mb-3 text-decoration-underline">Account</p>
+                    <p>Type: @Model.Account.Type</p>
+                    <p>Name: @Model.Account.Name</p>
+                    <p>Number: @Model.Account.Number</p>
+                </div>
+                <input type="submit" class="btn-client" value="Import" />
+            </div>
+        </EditForm>
+        <WizardProgressNav steps=@Steps @ref=Nav OnClick="HandleNavClick"></WizardProgressNav>
+    </div>
+</ContentCard>
+
+@code {
+    [SupplyParameterFromForm]
+    protected ImportModel Model { get; set; } = new ImportModel();
+
+    private int Columns = 0;
+    private const int Steps = 7;
+    private int Step = 1;
+
+    private WizardProgressBar Bar = new WizardProgressBar();
+    private WizardProgressNav Nav = new WizardProgressNav();
+
+    private List<Account> Accounts = new List<Account>();
+    private List<Account> AccountsFiltered = new List<Account>();
+    private List<Institution> Institutions = new List<Institution>();
+    private List<Template> Templates = new List<Template>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model.Account.PropertyChanged += OnAccountPropertyChanged;
+        Model.Institution.PropertyChanged += OnInstitutionPropertyChanged;
+        Model.Template.PropertyChanged += OnTemplatePropertyChanged;
+        Accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
+        Institutions = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
+        Templates = await Http.GetFromJsonAsync<List<Template>>("template/read") ?? new List<Template>();
+    }
+
+    private void OnAccountPropertyChanged(Object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Model.Account.Id) && e is PropertyChangedExtendedEventArgs<int> extended){
+            Account? account = Accounts
+                .Where(account => account.Id == extended.Value)
+                .FirstOrDefault();
+
+            if (account != null){
+                Model.Account.Type = account.Type;
+                Model.Account.Name = account.Name;
+                Model.Account.Number = account.Number;
+            }
+        }
+    }
+
+    private void OnInstitutionPropertyChanged(Object? sender, PropertyChangedEventArgs e)
+    {
+        if (e is PropertyChangedExtendedEventArgs<int> extended)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(Model.Institution.Id):
+                    // Console.WriteLine($"'{nameof(Model.InstitutionId)}' has changed to '{extended.Value}'.");
+
+                    AccountsFiltered = Accounts
+                        .Where(account => account.InstitutionId == extended.Value)
+                        .ToList();
+
+                    Institution? institution = Institutions
+                        .Where(institution => institution.Id == extended.Value)
+                        .FirstOrDefault();
+
+                    if (institution != null)
+                    {
+                        Model.Institution.Type = institution.Type;
+                        Model.Institution.Name = institution.Name;
+                        Model.Institution.StreetAddress = institution.SteetAddress;
+                        Model.Institution.City = institution.City;
+                        Model.Institution.State = institution.State;
+                        Model.Institution.PostalNumber = institution.PostalNumber;
+                        Model.Institution.PhoneNumber = institution.PhoneNumber;
+                        Model.Institution.Website = institution.Website;
+                        Model.Account.Name = "";
+                        Model.Account.Number = "";
+                    }
+                    break;
+
+                case nameof(Model.Institution.AddNew):
+
+                    break;
+            }
+        }
+    }
+
+    private void OnTemplatePropertyChanged(Object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Model.Template.Id) && e is PropertyChangedExtendedEventArgs<int> extended)
+        {
+            Template? template = Templates
+                .Where(template => template.Id == extended.Value)
+                .FirstOrDefault();
+
+            if (template != null)
+            {
+                Model.Template.Type = template.Type;
+                Model.Template.Name = template.Name;
+                Model.Template.TickerLabel = template.TickerLabel;
+                Model.Template.DescriptionLabel = template.DescriptionLabel;
+                Model.Template.SharesLabel = template.SharesLabel;
+                Model.Template.PriceLabel = template.PriceLabel;
+            }
+        }
+    }
+
+    private void HandleBarClick(int selected)
+    {
+        Step = selected;
+        Nav.SetStep(Step);
+    }
+
+    private void HandleNavClick(int selected)
+    {
+        Step = selected;
+        Bar.SetStep(Step);
+    }
+
+    private void HandleHeaderSelection(ChangeEventArgs e)
+    {
+        Model.AssetList.ForEach(cc => cc.Header = false);
+
+        if(Int32.TryParse(e.Value?.ToString(), out int row)){
+            Model.AssetList[row].Header = true;
+        }
+    }
+
+    private async void HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            IBrowserFile? file = null;
+
+            switch (Path.GetExtension(e.File.Name))
+            {
+                case ".csv":        // Comma Separated Values
+                    List<string> contents = await ReadAsStringAsync(e.File);
+
+                    var rows = contents.Select(line => line.Split(','));
+
+                    Columns = rows.Max(x => x.Length);
+                    foreach (var row in rows){
+                        var filtered = row.Select(c => c.Replace("\"", String.Empty)).ToArray();
+
+                        Model.AssetList.Add(
+                            new Client.Models.AssetRow { 
+                                Header = false,
+                                Position = false,
+                                Asset = filtered.Concat(Enumerable.Repeat("", Columns - filtered.Length)).ToList()  // Incoming file may generate jagged arrays; pad content for consistent length
+                            }
+                        );
+                    }
+
+                    break;
+                case ".txt":
+                    break;
+                case ".qfx":       // Quicken file
+                    file = e.File;
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch(Exception ex)
+        {
+            ToastService.ShowToast(ToastLevel.Error, $"File Upload Failed. Error Message: {ex.Message}");
+        }
+    }
+
+    private async void HandleFormSubmit(EditContext context)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to import the portfolio?");
+
+        if (confirmed){
+            StringBuilder messages = new StringBuilder();
+
+            if (context.Model is ImportModel import){
+                IEnumerable<Models.AssetRow> header = import.AssetList.Where(x => x.Header == true);
+
+                if (header.Count() == 0)
+                    messages.AppendLine("*A Header row has not been selected");
+
+                if (header.Count() > 1)
+                    messages.AppendLine("*More than one header row has been selected");
+
+                IEnumerable<Models.AssetRow> positions = import.AssetList.Where(x => x.Position == true);
+
+                if (positions.Count() == 0)
+                    messages.AppendLine("*Portfolio positions have not been selected");
+
+                if (import.Institution.Type == InstitutionType.NoneSelected)
+                    messages.AppendLine("*An Institution Type is required");
+
+                if (import.Institution.Name.Length == 0)
+                    messages.AppendLine("*An Institution name is required");
+
+                if (import.Account.Type == AccountType.None)
+                    messages.AppendLine("*An Account Type is required");
+
+                if (import.Account.Name.Length == 0)
+                    messages.AppendLine("*An Account name is required");
+
+                if (import.Account.Number.Length == 0)
+                    messages.AppendLine("*An Account number is required");
+
+                if (Model.Template.Name.Length == 0)
+                    messages.AppendLine("*A Template name is required");
+
+                if (Model.Template.TickerLabel.Length == 0)
+                    messages.AppendLine("*A Ticker Label is required");
+
+                if (Model.Template.DescriptionLabel.Length == 0)
+                    messages.AppendLine("*A Description Label is required");
+
+                if (Model.Template.SharesLabel.Length == 0)
+                    messages.AppendLine("*A Shares Label is required");
+
+                if (Model.Template.PriceLabel.Length == 0)
+                    messages.AppendLine("*A Price Label is required");
+            }
+
+            if (messages.Length == 0){
+                HttpResponseMessage? response = await Http.PostAsJsonAsync("portfolio/import", Model);
+
+                if (response.IsSuccessStatusCode)
+                    ToastService.ShowToast(ToastLevel.Success, $"Portfolio Successfully Imported. Response Code: {response.StatusCode}");
+                else
+                    ToastService.ShowToast(ToastLevel.Error, $"Portfolio Was Not Imported. Response Code: {response.StatusCode}");
+            }
+            else{
+
+                ToastService.ShowToast(ToastLevel.Error, $"The following discrepancies need to be resolved prior to import: {messages.ToString()}", settings => settings.DisableTimeout = true);
+            }
+        }
+    }
+
+    private async Task<List<string>> ReadAsStringAsync(IBrowserFile file)
+    {
+        List<string> lines = new List<string>();
+
+        if (file == null || file.Size == 0){
+            return await Task.FromResult(new List<string>());
+        }
+
+        using (var reader = new StreamReader(file.OpenReadStream()))
+        {
+            string? line;
+
+            while ((line = await reader.ReadLineAsync()) != null)
+                lines.Add(line);
+        }
+
+        return lines;
+    }
+}

@@ -74,6 +74,16 @@ namespace BlazorFinance.Server.Repositories
         }
 
         /// <summary>
+        /// Upserts an Asset object
+        /// </summary>
+        /// <param name="Asset"></param>
+        /// <returns>bool</returns>
+        public async Task<bool> UpsertAssetAsync(Asset asset)
+        {
+            return await _context.Upsert(asset);
+        }
+
+        /// <summary>
         /// Deletes an Asset object
         /// </summary>
         /// <param name="id"></param>
