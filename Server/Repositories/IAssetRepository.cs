@@ -18,6 +18,8 @@ namespace BlazorFinance.Server.Repositories
 
         public Task<int> UpdateAssetsAsync(List<Asset> assets);
 
+        public Task<bool> UpsertAssetAsync(Asset asset);
+
         public Task<bool> DeleteAssetAsync(BsonValue id);
     }
 }

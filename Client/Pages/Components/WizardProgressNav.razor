@@ -1,0 +1,39 @@
+﻿<div class ="nav-container">
+    <button type="button" class="btn-client" disabled="@(step <= 1)" title="Last" @onclick="SetLastStep">
+        <i class="oi bi-arrow-left-circle" style="font-size: 1.2rem;"></i>
+    </button>
+    <button type="button" class="btn-client" disabled="@(step >= steps)" title="Next" @onclick="SetNextStep">
+        <i class="oi bi-arrow-right-circle" style="font-size: 1.2rem;"></i>
+    </button>
+</div>
+
+@code {
+    private int step { get; set; } = 1;
+
+    [Parameter]
+    public int steps { get; set; } = 1;
+
+    [Parameter] 
+    public EventCallback<int> OnClick { get; set; }
+
+    private void SetLastStep()
+    {
+        if (step > 0)
+            step = step - 1;
+
+        OnClick.InvokeAsync(step);
+    }
+
+    private void SetNextStep()
+    {
+        if (step < steps)
+            step = step + 1;
+
+        OnClick.InvokeAsync(step);
+    }
+
+    public void SetStep(int selected)
+    {
+        step = selected >= 1 && selected <= steps ? selected : 1;
+    }
+}
