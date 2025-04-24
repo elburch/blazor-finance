@@ -10,9 +10,9 @@ namespace BlazorFinance.Shared.Types
         Cash,
         [Display(Name = "Savings")]
         Savings,
-        [Display(Name = "Discount")]
-        Checking,
         [Display(Name = "Checking")]
+        Checking,
+        [Display(Name = "Discount")]
         Discount,
         [Display(Name = "Education")]
         Education,
