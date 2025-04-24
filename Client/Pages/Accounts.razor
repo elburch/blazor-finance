@@ -6,7 +6,7 @@
 @using System.Text.Json
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
-@inject IToastService ToastService
+@inject Blazored.Toast.Services.IToastService ToastService
 
 <ContentCard>
     <h3>Accounts</h3>
@@ -142,11 +142,11 @@
 
     private async Task OnRowRemoving(CancellableRowChange<Account> e)
     {
-        var assets = (await Http.GetFromJsonAsync<List<Asset>>("asset") ?? new List<Asset>())
+        var assets = (await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>())
             .Where(t => t.AccountId == e.OldItem.Id)
             .ToList<Asset>() ?? new List<Asset>();
 
-        var expenses = (await Http.GetFromJsonAsync<List<Expense>>("expense") ?? new List<Expense>())
+        var expenses = (await Http.GetFromJsonAsync<List<Expense>>("expense/read") ?? new List<Expense>())
             .Where(t => t.Account?.Id == e.OldItem.Id)
             .ToList<Expense>() ?? new List<Expense>();
 
