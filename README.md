@@ -123,21 +123,24 @@ For Each Year In Projection
     For Each Day In Year
 
         Get Expenses Where Day Falls Between the Expense Start Date and End Date
-        Subtract Expenses From Account and/or Asset Balance
+        Subtract Expenses From Account Balance and/or Asset Market Value
         Add Daily Inflation to Expenses
 
         Get Income Where Day Falls Between the Income Start Date and End Date
-        Add Income to Account and/or Asset Balance
-        Add Daily Interest to Account and Asset Balances
+        Add Income to Account Balance and/or Asset Market Value
+
+        Add Daily Interest to Account Balance and Asset Market Value
+        Add Daily Inflation to Expense Amount
 
 
 <p>(<a href="#readme-top">back to top</a>)</p>
 
 ## Roadmap
 
-* Feature Refinement: Validation and Error Handling for Portfolio Import Tool (from csv file)
+* Feature Refinement: Improve validation and error handling of Portfolio Import Tool (from csv file)
+* Feature Refinement: Improve accuracy and execution performance of Projections and Summary -> Net Worth Projections
 * Project Framework: Add automated test framework/project
-* New Feature: Portfolio Import Tool (from Quicken file)
+* New Feature: Add Quicken file option to Portfolio Import Tool
 * New Feature: Selectable/Saveable Database File
 
 <p>(<a href="#readme-top">back to top</a>)</p>
