@@ -6,7 +6,7 @@
 @using System.Text.Json
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
-@inject IToastService ToastService
+@inject Blazored.Toast.Services.IToastService ToastService
 
 <ContentCard>
     <h3>Expenses</h3>
@@ -46,6 +46,7 @@
                                   TextField="(x) => Enum.GetName(typeof(ExpenseType), (ExpenseType)x)"
                                   Editable="true">
             </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Expense.InflationSensitive)" Caption="Inflation Sensitive" Editable />
             <DataGridSelectColumn Field="@nameof(Expense.Account)"
                                   Caption="Pay From Account"
                                   Editable="true">
@@ -116,7 +117,7 @@
                                   Editable="true">
             </DataGridSelectColumn>
             <DataGridColumn Field="@nameof(Expense.StartingDate)" Caption="Starting Date" Editable />
-             <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
+            <DataGridColumn Field="@nameof(Expense.EndingDate)" Caption="Ending Date" Editable />
          </DataGridColumns>
      </DataGrid>
 </ContentCard>

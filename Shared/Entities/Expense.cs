@@ -26,6 +26,8 @@ namespace BlazorFinance.Shared.Entities
 
         public ExpenseType Type { get; set; }
 
+        public bool InflationSensitive { get; set; }
+
         public string Description { get; set; } = string.Empty;
 
         public decimal Amount { get; set; }
