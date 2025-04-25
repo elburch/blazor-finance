@@ -82,7 +82,11 @@ Income received directly from an Institution (wages, pension, socal security, et
 * FK relationship to Account (that Income will be deposited to)
 * FK relationship to Asset (that Income will be invested in)
 
-NOTE: If an Account and Asset are both associated with the same Income record, a 50% allocation will be assumed.  For different allocation percentages, it is prefereable to create separate records with each Income Asset or Account receiving a specific dollar ammount.
+NOTE: Income will be "deposited" using the following methods (in order of priority):
+
+* 100% "deposit" to any single Asset associated with the Income record
+* If a single Asset is not defined, the Income will be "deposited" equally among all Assets associated with the Income parent Account
+* If there are no Assets associated with the Income parent Account, the Income will be "deposited" to the parent Account
 
 ### Expenses
 Expenses can be "paid for" by an Account "withdrawal" or "selling" a portion of an Asset.
@@ -92,7 +96,11 @@ TIP: Use "Debt" for big ticket purchases, such as Homes, Cars, etc.  This will e
 * FK relationship to Account (that Expenses are "withdrawn" from)
 * FK relationship to Asset (that are sold to "pay" for Expenses)
 
-NOTE: If an Account and Asset are both associated with the same Expense record, a 50% allocation will be assumed.  For different allocation percentages, it is prefereable to create separate records with each Expense Asset or Account receiving a specific dollar ammount.
+NOTE: Expenses will be "withdrawn" using the following methods (in order of priority):
+
+* 100% "withdrawal" from any single Asset associated with the Expense record that has a Market Value >= Expense
+* If a single Asset is not defined, the Expense will be "withdrawn" from the Account Balance if the Balance >= Expense
+* If neither of the first two conditions are met, the Expense will be "withdrawn" equally from all Assets associated with the Expense parent Account
 
 ### Templates
 Templates are used to identify the ordinal position of columns in brokerage portfolio import files (.csv format).  
@@ -146,14 +154,6 @@ For Each Year In Projection
 <p>(<a href="#readme-top">back to top</a>)</p>
 
 ## License
-License?
+<a href="https://www.gnu.org/licenses/gpl-3.0.md">GNU General Public License</a> version 3 or any later version
 
 <p>(<a href="#readme-top">back to top</a>)</p>
-
-## Disclaimer
-
-<p>(<a href="#readme-top">back to top</a>)</p>
-
-## Contact
-
-<p>(<a href="top">back to top</a>)</p>
