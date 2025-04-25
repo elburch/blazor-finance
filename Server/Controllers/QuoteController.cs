@@ -1,7 +1,6 @@
 ﻿using BlazorFinance.Server.Repositories;
 using BlazorFinance.Server.Services;
 using BlazorFinance.Shared.Entities;
-using BlazorFinance.Shared.Types;
 using Microsoft.AspNetCore.Mvc;
 using YahooFinanceApi;
 
@@ -23,7 +22,7 @@ namespace BlazorFinance.Server.Controllers
         [HttpGet("update")]
         public async Task<IActionResult> UpdateStaleMarketValuesAsync()
         {
-            List<Asset> assets = await _repository.ReadAssetListAsync(x => x.Symbol.Length > 0 && x.SnapshotDate.Date < DateTime.Today);
+            List<Asset> assets = await _repository.ReadAssetListAsync(x => x.Symbol.Length > 0 && x.Symbol.Length < 6 && x.SnapshotDate.Date < DateTime.Today);
 
             if (assets == null || assets.Count == 0){
                 return StatusCode(StatusCodes.Status204NoContent);
@@ -39,14 +38,25 @@ namespace BlazorFinance.Server.Controllers
                     .First();
 
                 if (asset != null){
-                    asset.Price = (decimal)quote.Value.RegularMarketPrice;
-                    asset.MarketValue = (decimal)asset.Quantity * (decimal)quote.Value.RegularMarketPrice;
-                    asset.SnapshotDate = DateTime.Now;
+                    //try
+                    //{
+                        dynamic? price;
+                        if (quote.Value.Fields.TryGetValue("RegularMarketPrice", out price)){
+                            asset.Price = (decimal)price;
+                        }
 
-                    dynamic? rate;
-                    if (quote.Value.Fields.TryGetValue("TrailingAnnualDividendRate", out rate)){
-                        asset.DividendRate = (decimal)rate;
-                    }
+                        dynamic? rate;
+                        if (quote.Value.Fields.TryGetValue("TrailingAnnualDividendRate", out rate)){
+                            asset.DividendRate = (decimal)rate;
+                        }
+
+                        asset.MarketValue = (decimal)asset.Quantity * (decimal)asset.Price;
+                        asset.SnapshotDate = DateTime.Now;
+                    //}
+                    //catch(Exception ex)
+                    //{
+                    //    Console.WriteLine(ex.Message);
+                    //}
                 }
             }
 
