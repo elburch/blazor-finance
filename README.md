@@ -37,9 +37,9 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-The Blazor Finance project was created as a learning exercise, with a focus on ASP.NET Core Blazor.  It will run in standalone mode, but an internet connection is required to get the latest asset market values.
+The Blazor Finance project is a Blazor Progressive Web Application (PWA).  It will run in standalone mode, but an internet connection is required to get the latest asset market values.
 
-The application is explicitly intended for use on a local workstation, without a direct connection to external institutions for importing portfolio assets.  This was a deliberate design decision to limit security vulnerabilities.  As such, application configuration is performed manually, with a portfolio import tool (from file) designated as a roadmap item.
+The application is explicitly intended for use on a local workstation, without a direct connection to external institutions for importing portfolio assets.  This was a deliberate design decision to limit security vulnerabilities.  As such, portfolios are created manually, or with the portfolio import tool (from a .csv file).  Import from a Quicken file is designated as a roadmap item.
 
 <p>(<a href="#readme-top">back to top</a>)</p>
 
