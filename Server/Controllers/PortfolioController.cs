@@ -114,7 +114,7 @@ namespace BlazorFinance.Server.Controllers
                     Price = Convert.ToDecimal(position[price].Replace("$", String.Empty))
                 };
 
-                List<Asset> assets = await _assRepository.ReadAssetListAsync(x => x.Symbol == asset.Symbol);
+                List<Asset> assets = await _assRepository.ReadAssetListAsync(x => x.Symbol == asset.Symbol && x.AccountId == accountId);
                 if(assets.Count > 0){
                     asset.Id = assets.Select(xx => xx.Id).FirstOrDefault();
                 }
