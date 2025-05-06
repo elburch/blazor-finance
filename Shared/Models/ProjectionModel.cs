@@ -12,6 +12,10 @@ namespace BlazorFinance.Shared.Models
 
         public int ExpirationAge { get; set; }
 
+        public decimal AccountAppreciation { get; set; }
+
+        public decimal AssetAppreciation { get; set; }
+
         public decimal AnnualInflation { get; set; }
     }
 }

@@ -29,7 +29,23 @@
         </Field>
         <Field>
             <FieldLabel>
-                Annual Inflation
+                Account Appreciation %
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="decimal" @bind-Value="@_model.AccountAppreciation" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Asset Appreciation %
+            </FieldLabel>
+            <FieldBody>
+                <NumericEdit TValue="decimal" @bind-Value="@_model.AssetAppreciation" Class="projection-item" />
+            </FieldBody>
+        </Field>
+        <Field>
+            <FieldLabel>
+                Annual Inflation %
             </FieldLabel>
             <FieldBody>
                 <NumericEdit TValue="decimal" @bind-Value="@_model.AnnualInflation" Class="projection-item" />
@@ -37,19 +53,18 @@
         </Field>
         <Field>
             <FieldBody>
-                <button type="button" class="btn-client" title="Calculate" @onclick="GetSavingsProjection">
+                <button type="button" class="btn-client" title="Calculate" @onclick="GetAccountProjection">
                     <i class="oi bi-calculator" style="font-size: 1.2rem;"></i>
                 </button>
             </FieldBody>
         </Field>
     </ContentCard>
-
     <ContentCard Height="40rem" Width="60rem">
-        <div style="margin-bottom:1rem;"><em>Portfolio Projection</em></div>
-        <LoadingOrbital
-            Style="text-align: center;"
-            LoadingText="Say Cheese"
-            IsLoading="_loading"
+        <div style="margin-bottom:1rem;"><em>Account Balances</em></div>
+        <LoadingOrbital 
+        Style="text-align: center;"
+        LoadingText="Eeew, Boogers"
+        IsLoading="_loading"
         >
         </LoadingOrbital>
         <CurrencyChart 
@@ -76,11 +91,25 @@
     {
         CurrentAge = 50,
         ExpirationAge = 100,
-        AnnualInflation = 3.0M,
+        AccountAppreciation = 3.0M,
+        AssetAppreciation = 5.0M,
+        AnnualInflation = 3.0M
      };
 
     private CurrencyChart _chart = new CurrencyChart();
-    private LoadingOrbital _orbital = new LoadingOrbital();
+
+    private class AccountBalance
+    {
+        public int Id { get; set; }
+
+        public string Name { get; set; } = String.Empty;
+
+        public decimal Balance { get; set; }
+
+        public int AssetCount { get; set; }
+
+        public decimal MarketValue { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,20 +125,40 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await GetSavingsProjection();
+        await GetAccountProjection();
     }
 
-    private async Task GetSavingsProjection()
+    private async Task GetAccountProjection()
     {
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
 
-        List<Account> accounts = _accounts
-            .Select(x => x.Clone())
+        List<AccountBalance> accounts =
+            (
+                from Account in _accounts
+                let Assets =
+                (
+                    from Asset in _assets
+                    where Asset.AccountId == Account.Id
+                    select Asset
+                )
+                select new AccountBalance() { 
+                    Id = Account.Id,
+                    Name = Account.Name,
+                    Balance = Account.Balance, 
+                    AssetCount = Assets.Count(),
+                    MarketValue = Assets.Where(x => x.SellDate >= today).Sum(y => y.MarketValue)
+                }
+            )
+            .Where(x => x.Balance > 0 || x.MarketValue > 0)
             .ToList();
+
+        // foreach(AccountBalance bal in balances){
+        //     Console.WriteLine($"Id: {bal.Id}, Name: {bal.Name}, Balance: {bal.Balance}, MarketValue: {bal.MarketValue}");
+        // }
 
         List<Asset> assets = _assets
             .Select(x => x.Clone())
-            .Where(y => y.SellDate >= today)
+            .Where(y => y.Type.isIlliquid() && y.SellDate >= today)
             .ToList();
 
         List<Expense> expenses = _expenses
@@ -121,76 +170,56 @@
             .ToList();
 
         List<string> labels = new List<string>();
-        List<string> balance = new List<string>();
         List<string> liquid = new List<string>();
         List<string> illiquid = new List<string>();
+
+        Dictionary<int, List<string>> sets = new Dictionary<int, List<string>>();
+        foreach (var account in accounts){
+            sets.Add(account.Id, new List<string >());
+        }
 
         int years = _model.ExpirationAge - _model.CurrentAge;
 
         foreach (var day in today.DaysUntil(today.AddYears(years)))
         {
-            // Subtract daily expenses + inflation from account balance and/or asset market value
             foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily)){
-                // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount && day <= x.SellDate).FirstOrDefault();
-                if (asset != null){
-                    asset.MarketValue -= expense.Amount;
-                    continue;
-                }
-
-                // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                // if account id = expense account id, then subtract expense from balance or market value
+                var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    account.Balance -= expense.Amount;
-                    continue;
-                }
-
-                // subtract expense equally among all account assets
-                var asses = assets.Where(x => x.AccountId == expense.Account?.Id && day <= x.SellDate);
-                if (asses.Count() > 0){
-                    var amount = expense.Amount / asses.Count();
-
-                    foreach (var ass in asses){
-                        ass.MarketValue -= amount;
-                    } 
+                    // if (account.Balance >= expense.Amount)
+                    //     account.Balance = (account.Balance - expense.Amount);
+                    // else if (account.MarketValue >= expense.Amount)
+                    //     account.MarketValue = (account.MarketValue - expense.Amount);
+                    if (account.AssetCount > 0)
+                        account.MarketValue = (account.MarketValue - expense.Amount);
+                    else
+                        account.Balance = (account.Balance - expense.Amount);
                 }
             }
 
-            // Add daily incomes to account balance and/or asset market value
             foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Daily)){
-                // if asset id = income asset id, then add the income to the asset market value
-                var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                if (asset != null){
-                    asset.MarketValue = (asset.MarketValue + income.Amount);
-                    continue;
-                }
-
-                // distribute income equally among all account assets
-                var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                if (asses.Count() > 0){
-                    var amount = income.Amount / asses.Count();
-
-                    foreach (var ass in asses){
-                        ass.MarketValue = (ass.MarketValue + amount);
-                    }
-                    continue;
-                }
-
-                // if account id = income account id, then add the income to account balance
+                // if account id = income account id, then add income to balance or market value
                 var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    account.Balance = (account.Balance + income.Amount);
+                    if (account.AssetCount > 0)
+                        account.MarketValue = (account.MarketValue + income.Amount);
+                    else
+                        account.Balance = (account.Balance + income.Amount);
                 }
             }
 
             foreach (var account in accounts){
-                // Add daily portion of annual growth percentage to account balance
-                account.Balance += account.Balance * (decimal)((account.AnnualGrowth / 100) / 365) ;
+                if (account.AssetCount > 0)
+                    // Add daily portion of annual growth percentage to market value
+                    account.MarketValue += account.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
+                else
+                    // Add daily portion of annual growth percentage to account balance
+                    account.Balance += account.Balance * (decimal)((_model.AccountAppreciation / 100) / 365);
             }
 
-            foreach (var asset in assets.Where(x => x.PurchaseDate <= day &&  day <= x.SellDate)){
+            foreach (var asset in assets){
                 // Add daily portion of annual growth percentage to market value
-                asset.MarketValue += asset.MarketValue * (decimal)((asset.AnnualGrowth / 100) / 365);
+                asset.MarketValue += asset.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
             }
 
             foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.InflationSensitive == true)){
@@ -200,30 +229,36 @@
             }
 
             if(day.DayOfYear == 1){
-                // Console.WriteLine($"Accounts Balance: {accounts.Select(x => x.Balance).Sum()}");
-                // Console.WriteLine($"Assets Balance: {assets.Select(x => x.MarketValue).Sum()}");
-                foreach (var asset in assets.Where(x => x.PurchaseDate <= day && day <= x.SellDate && x.DividendRate > 0)){
-                    // Add annual dividend yield to market value (reinvested)
-                    asset.MarketValue += (decimal)asset.Quantity * asset.DividendRate;
-                }
-
                 labels.Add((_model.CurrentAge + day.Year - today.Year).ToString());
 
-                balance.Add(accounts
-                    .Select(x => x.Balance)
-                    .Sum()
-                    .ToString()
-                );
+                foreach (var account in accounts){
+                    var balance = accounts
+                        .Where(x => x.Id == account.Id)
+                        .Select(y => y.Balance)
+                        .DefaultIfEmpty(0)
+                        .First();
 
-                liquid.Add(assets
-                    .Where(x => x.Type.isLiquid())
-                    .Select(y => y.MarketValue)
-                    .Sum()
-                    .ToString()
-                );
+                    var market = accounts
+                        .Where(x => x.Id == account.Id)
+                        .Select(y => y.MarketValue)
+                        .DefaultIfEmpty(0)
+                        .First();
+
+                    sets[account.Id].Add(Convert.ToString(balance + market));
+                }
+
+                var bbal = accounts
+                    .Select(x => x.Balance)
+                    .Sum();
+
+                var mbal = accounts
+                    .Select(x => x.MarketValue)
+                    .Sum();
+
+                liquid.Add(Convert.ToString(bbal + mbal));
 
                 illiquid.Add(assets
-                    .Where(x => x.Type.isIlliquid())
+                    .Where(x => x.SellDate >= day)
                     .Select(y => y.MarketValue)
                     .Sum()
                     .ToString()
@@ -231,336 +266,168 @@
             }
 
             if (day.IsWeekly()){
-                // Subtract weekly expenses from account balance and/or asset market value
                 foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Weekly)){
-                    // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                    var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue -= expense.Amount;
-                        continue;
-                    }
-
-                    // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                    var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                    // if account id = expense account id, then subtract expense from balance or market value
+                    var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance -= expense.Amount;
-                        continue;
-                    }
-
-                    // subtract expense equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                    if (asses.Count() > 0){
-                        var amount = expense.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue -= amount;
-                        }
+                        // if (account.Balance >= expense.Amount)
+                        //     account.Balance = (account.Balance - expense.Amount);
+                        // else// if (account.MarketValue >= expense.Amount)
+                        //     account.MarketValue = (account.MarketValue - expense.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue - expense.Amount);
+                        else
+                            account.Balance = (account.Balance - expense.Amount);
                     }
                 }
 
-                // Add weekly incomes to account balance and/or asset market value
                 foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Weekly)){
-                    // if asset id = income asset id, then add the income to the asset market value
-                    var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue = (asset.MarketValue + income.Amount);
-                        continue;
-                    }
-
-                    // distribute income equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                    if (asses.Count() > 0){
-                        var amount = income.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue = (ass.MarketValue + amount);
-                        }
-                        continue;
-                    }
-
-                    // if account id = income account id, then add the income to account balance
+                    // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance = (account.Balance + income.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue + income.Amount);
+                        else
+                            account.Balance = (account.Balance + income.Amount);
                     }
                 }
             }
 
             if (day.IsBiWeekly()){
-                // Subtract bi weekly expenses from account balance and/or asset market value
                 foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.BiWeekly)){
-                    // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                    var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue -= expense.Amount;
-                        continue;
-                    }
-
-                    // if account balance >= expense, then subtract expense from account balance
-                    var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance > 0).FirstOrDefault();
+                    // if account id = expense account id, then subtract expense from balance or market value
+                    var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance -= expense.Amount;
-                        continue;
-                    }
-
-                    // subtract expense equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                    if (asses.Count() > 0){
-                        var amount = expense.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue -= amount;
-                        }
+                        // if (account.Balance >= expense.Amount)
+                        //     account.Balance = (account.Balance - expense.Amount);
+                        // else if (account.MarketValue >= expense.Amount)
+                        //     account.MarketValue = (account.MarketValue - expense.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue - expense.Amount);
+                        else
+                            account.Balance = (account.Balance - expense.Amount);
                     }
                 }
 
-                // Add bi weekly incomes to account balance and/or asset market value
                 foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.BiWeekly)){
-                    // if asset id = income asset id, then add the income to the asset market value
-                    var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue = (asset.MarketValue + income.Amount);
-                        continue;
-                    }
-
-                    // distribute income equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                    if (asses.Count() > 0){
-                        var amount = income.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue = (ass.MarketValue + amount);
-                        }
-                        continue;
-                    }
-
-                    // if account id = income account id, then add the income to account balance
+                    // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance = (account.Balance + income.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue + income.Amount);
+                        else
+                            account.Balance = (account.Balance + income.Amount);
                     }
                 }
             }
 
             if (day.IsSemiMonthly()){
-                // Subtract semi monthly expenses from account balance and/or asset market value
                 foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly)){
-                    // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                    var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue -= expense.Amount;
-                        continue;
-                    }
-
-                    // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                    var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                    // if account id = expense account id, then subtract expense from balance or market value
+                    var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance -= expense.Amount;
-                        continue;
-                    }
-
-                    // subtract expense equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                    if (asses.Count() > 0){
-                        var amount = expense.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue -= amount;
-                        }
+                        // if (account.Balance >= expense.Amount)
+                        //     account.Balance = (account.Balance - expense.Amount);
+                        // else if (account.MarketValue >= expense.Amount)
+                        //     account.MarketValue = (account.MarketValue - expense.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue - expense.Amount);
+                        else
+                            account.Balance = (account.Balance - expense.Amount);
                     }
                 }
 
-                // Add semi monthly incomes to account balance and/or asset market value
                 foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiMonthly)){
-                    // if asset id = income asset id, then add the income to the asset market value
-                    var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue = (asset.MarketValue + income.Amount);
-                        continue;
-                    }
-
-                    // distribute income equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                    if (asses.Count() > 0){
-                        var amount = income.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue = (ass.MarketValue + amount);
-                        }
-                        continue;
-                    }
-
-                    // if account id = income account id, then add the income to account balance
+                    // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance = (account.Balance + income.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue + income.Amount);
+                        else
+                            account.Balance = (account.Balance + income.Amount);
                     }
                 }
             }
 
             if (day.IsMonthly()){
-                // Subtract monthly expenses from account balance and/or asset market value
                 foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly)){
-                    // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                    var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue -= expense.Amount;
-                        continue;
-                    }
-
-                    // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                    var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                    // if account id = expense account id, then subtract expense from balance or market value
+                    var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance -= expense.Amount;
-                        continue;
-                    }
-
-                    // subtract expense equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                    if (asses.Count() > 0){
-                        var amount = expense.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue -= amount;
-                        }
+                        // if (account.Balance >= expense.Amount)
+                        //     account.Balance = (account.Balance - expense.Amount);
+                        // else if (account.MarketValue >= expense.Amount)
+                        //     account.MarketValue = (account.MarketValue - expense.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue - expense.Amount);
+                        else
+                            account.Balance = (account.Balance - expense.Amount);
                     }
                 }
 
-                // Add monthly incomes to account balance and/or asset market value
                 foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.Monthly)){
-                    // if asset id = income asset id, then add the income to the asset market value
-                    var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue = (asset.MarketValue + income.Amount);
-                        continue;
-                    }
-
-                    // distribute income equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                    if (asses.Count() > 0){
-                        var amount = income.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue = (ass.MarketValue + amount);
-                        }
-                        continue;
-                    }
-
-                    // if account id = income account id, then add the income to account balance
+                    // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance = (account.Balance + income.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue + income.Amount);
+                        else
+                            account.Balance = (account.Balance + income.Amount);
                     }
                 }
             }
 
             if (day.IsSemiAnnually()){
-                // Subtract semi annual expenses from account balance and/or asset market value
                 foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually)){
-                    // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                    var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue -= expense.Amount;
-                        continue;
-                    }
-
-                    // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                    var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                    // if account id = expense account id, then subtract expense from balance or market value
+                    var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance -= expense.Amount;
-                        continue;
-                    }
-
-                    // subtract expense equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                    if (asses.Count() > 0){
-                        var amount = expense.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue -= amount;
-                        }
+                        // if (account.Balance >= expense.Amount)
+                        //     account.Balance = (account.Balance - expense.Amount);
+                        // else if (account.MarketValue >= expense.Amount)
+                        //     account.MarketValue = (account.MarketValue - expense.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue - expense.Amount);
+                        else
+                            account.Balance = (account.Balance - expense.Amount);
                     }
                 }
 
-                // Add semi annual incomes to account balance and/or asset market value
                 foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.Frequency == Frequency.SemiAnnually)){
-                    // if asset id = income asset id, then add the income to the asset market value
-                    var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                    if (asset != null){
-                        asset.MarketValue = (asset.MarketValue + income.Amount);
-                        continue;
-                    }
-
-                    // distribute income equally among all account assets
-                    var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                    if (asses.Count() > 0){
-                        var amount = income.Amount / asses.Count();
-
-                        foreach (var ass in asses){
-                            ass.MarketValue = (ass.MarketValue + amount);
-                        }
-                        continue;
-                    }
-
-                    // if account id = income account id, then add the income to account balance
+                    // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        account.Balance = (account.Balance + income.Amount);
+                        if (account.AssetCount > 0)
+                            account.MarketValue = (account.MarketValue + income.Amount);
+                        else
+                            account.Balance = (account.Balance + income.Amount);
                     }
                 }
             }         
 
-            // Subtract annual expenses from account balance and/or asset market value
             foreach (var expense in expenses.Where(x => x.StartingDate.Month == day.Month && x.StartingDate.Day == day.Day && x.EndingDate >= day && x.Frequency == Frequency.Annually)){
-                // if asset id = expense asset id and market value >= expense, then subtract expense from asset market value
-                var asset = assets.Where(x => x.Id == expense.Asset?.Id && x.MarketValue >= expense.Amount).FirstOrDefault();
-                if (asset != null){
-                    asset.MarketValue -= expense.Amount;
-                    continue;
-                }
-
-                // if account id = expense account id and balance >= expense, then subtract expense from account balance
-                var account = accounts.Where(x => x.Id == expense.Account?.Id && x.Balance >= expense.Amount).FirstOrDefault();
+                // if account id = expense account id, then subtract expense from balance or market value
+                var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    account.Balance -= expense.Amount;
-                    continue;
-                }
-
-                // subtract expense equally among all account assets
-                var asses = assets.Where(x => x.AccountId == expense.Account?.Id);
-                if (asses.Count() > 0){
-                    var amount = expense.Amount / asses.Count();
-
-                    foreach (var ass in asses){
-                        ass.MarketValue -= amount;
-                    }
+                    // if (account.Balance >= expense.Amount)
+                    //     account.Balance = (account.Balance - expense.Amount);
+                    // else if (account.MarketValue >= expense.Amount)
+                    //     account.MarketValue = (account.MarketValue - expense.Amount);
+                    if (account.AssetCount > 0)
+                        account.MarketValue = (account.MarketValue - expense.Amount);
+                    else
+                        account.Balance = (account.Balance - expense.Amount);
                 }
             }
 
-            // Add annual incomes to account balance and/or asset market value
             foreach (var income in incomes.Where(x => x.StartingDate.Month == day.Month && x.StartingDate.Day == day.Day && x.EndingDate >= day && x.Frequency == Frequency.Annually)){
-                // if asset id = income asset id, then add the income to the asset market value
-                var asset = assets.Where(x => x.Id == income.Asset?.Id && day <= x.SellDate).FirstOrDefault();
-                if (asset != null){
-                    asset.MarketValue = (asset.MarketValue + income.Amount);
-                    continue;
-                }
-
-                // distribute income equally among all account assets
-                var asses = assets.Where(x => x.AccountId == income.Account?.Id && day <= x.SellDate);
-                if (asses.Count() > 0){
-                    var amount = income.Amount / asses.Count();
-
-                    foreach (var ass in asses){
-                        ass.MarketValue = (ass.MarketValue + amount);
-                    }
-                    continue;
-                }
-
-                // if account id = income account id, then add the income to account balance
+                // if account id = income account id, then add income to balance or market value
                 var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    account.Balance = (account.Balance + income.Amount);
+                    if (account.AssetCount > 0)
+                        account.MarketValue = (account.MarketValue + income.Amount);
+                    else
+                        account.Balance = (account.Balance + income.Amount);
                 }
             }
         }
@@ -569,34 +436,44 @@
 
         _chart.Labels = labels;
 
+        System.Drawing.Color lime = System.Drawing.Color.Lime;
+
+        foreach (var set in sets){
+            string name = accounts
+                .Where(x => x.Id == set.Key)
+                .Select(y => y.Name)
+                .DefaultIfEmpty("")
+                .First();
+
+            _chart.Datasets.Add(
+                new ChartDataset
+                {
+                    Label = name,
+                    Data = set.Value.ToArray(),
+                    BackgroundColor = new string[] { $"#{lime.R:X2}{lime.G:X2}{lime.B:X2}" }
+                }
+            );
+
+            lime = System.Drawing.Color.FromArgb(lime.A, (int)(lime.R * 0.9), (int)(lime.G * 0.9), (int)(lime.B * 0.9));
+        }
+
         _chart.Datasets.Add(
             new ChartDataset
-            {
-                Label = "Account Balance $",
-                Data = balance.ToArray(),
-                BackgroundColor = new string[] { "#81C78480" },
-                BorderColor = "#194D33",
-            }
+                {
+                    Label = "Aggregate Balance",
+                    Data = liquid.ToArray(),
+                    BackgroundColor = new string[] { "#FF8A6580" }
+                }
         );
 
         _chart.Datasets.Add(
             new ChartDataset
-            {
-                Label = "Liquid Assets $",
-                Data =liquid.ToArray(),
-                    BackgroundColor = new string[] { "#FF8A6580" },
-                BorderColor = "#BF360C",
-            });
-
-        _chart.Datasets.Add(
-            new ChartDataset
-            {
-                Label = "Illiquid Assets $",
-                Data = illiquid.ToArray(),
+                {
+                    Label = "Real Estate and Collectibles",
+                    Data = illiquid.ToArray(),
                     BackgroundColor = new string[] { "#64B5F680" },
-                BorderColor = "#0D47A1",
-
-            });
+                }
+        );
 
         await _chart.Update();
     }
