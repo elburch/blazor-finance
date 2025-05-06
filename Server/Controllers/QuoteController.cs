@@ -29,7 +29,10 @@ namespace BlazorFinance.Server.Controllers
             }
 
             IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(
-                assets.Select(x => x.Symbol).ToList()
+                assets
+                    .Select(x => x.Symbol)
+                    .Distinct()
+                    .ToList()
             );
 
             foreach (var quote in quotes){
