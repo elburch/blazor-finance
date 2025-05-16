@@ -220,8 +220,8 @@
 </ContentCard>
 
 @code {
-    [SupplyParameterFromForm]
-    protected ImportModel Model { get; set; } = new ImportModel();
+        [SupplyParameterFromForm]
+        protected ImportModel Model { get; set; } = new ImportModel();
 
     private int Columns = 0;
     private const int Steps = 7;
@@ -352,7 +352,9 @@
                 case ".csv":        // Comma Separated Values
                     List<string> contents = await ReadAsStringAsync(e.File);
 
-                    var rows = contents.Select(line => line.Split(','));
+                    System.Text.RegularExpressions.Regex CSVParser = new System.Text.RegularExpressions.Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+
+                    var rows = contents.Select(line => CSVParser.Split(line)).ToList();
 
                     Columns = rows.Max(x => x.Length);
                     foreach (var row in rows){
