@@ -23,26 +23,25 @@ namespace BlazorFinance.Server.Controllers
         public async Task<IActionResult> UpdateStaleMarketValuesAsync()
         {
             List<Asset> assets = await _repository.ReadAssetListAsync(x => x.Symbol.Length > 0 && x.Symbol.Length < 6 && x.SnapshotDate.Date < DateTime.Today);
-
             if (assets == null || assets.Count == 0){
                 return StatusCode(StatusCodes.Status204NoContent);
             }
 
-            IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(
-                assets
-                    .Select(x => x.Symbol)
-                    .Distinct()
-                    .ToList()
-            );
+            try
+            {
+                IReadOnlyDictionary<string, Security> quotes = await _quoteService.GetQuotes(
+                    assets
+                        .Select(x => x.Symbol)
+                        .Distinct()
+                        .ToList()
+                );
 
-            foreach (var quote in quotes){
-                Asset asset = assets
-                    .Where(x => x.Symbol == quote.Value.Symbol)
-                    .First();
+                foreach (var quote in quotes){
+                    Asset asset = assets
+                        .Where(x => x.Symbol == quote.Value.Symbol)
+                        .First();
 
-                if (asset != null){
-                    //try
-                    //{
+                    if (asset != null){
                         dynamic? price;
                         if (quote.Value.Fields.TryGetValue("RegularMarketPrice", out price)){
                             asset.Price = (decimal)price;
@@ -55,15 +54,17 @@ namespace BlazorFinance.Server.Controllers
 
                         asset.MarketValue = (decimal)asset.Quantity * (decimal)asset.Price;
                         asset.SnapshotDate = DateTime.Now;
-                    //}
-                    //catch(Exception ex)
-                    //{
-                    //    Console.WriteLine(ex.Message);
-                    //}
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, ex.Message);
+            }
 
-            return await _repository.UpdateAssetsAsync(assets) == quotes.Count
+            int count = await _repository.UpdateAssetsAsync(assets);
+
+            return count == assets.Count
                 ? StatusCode(StatusCodes.Status200OK)
                 : StatusCode(StatusCodes.Status400BadRequest);
         }
