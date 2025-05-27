@@ -58,16 +58,16 @@
     <ContentCard Width="35rem">
         <em>Net Worth Trend</em>
         <LoadingOrbital 
-            Style="text-align: center;"
-            LoadingText="Wait For it..."
-            IsLoading="_loading">
+        Style="text-align: center;"
+        LoadingText="Wait For it..."
+        IsLoading="_loading">
         </LoadingOrbital>
         <CurrencyChart 
-            Id="worth-trend"
-            Type="@ChartType.Line"
-            xLabel="Year"
-            yLabel="Value"
-            @ref="_worth">
+        Id="worth-trend"
+        Type="@ChartType.Line"
+        xLabel="Year"
+        yLabel="Value"
+        @ref="_worth">
         </CurrencyChart>
     </ContentCard>
 </ContentRow>
@@ -75,29 +75,29 @@
     <ContentCard Width="35rem">
         <em>Income Trend</em>
         <LoadingOrbital 
-            Style="text-align: center;"
-            LoadingText="Wait For it..."
-            IsLoading="_loading">
+        Style="text-align: center;"
+        LoadingText="Wait For it..."
+        IsLoading="_loading">
         </LoadingOrbital>
         <CurrencyChart Id="income-trend"
-                       Type="@ChartType.Line"
-                       xLabel="Year"
-                       yLabel="Value"
-                       @ref="_income">
+        Type="@ChartType.Line"
+        xLabel="Year"
+        yLabel="Value"
+        @ref="_income">
         </CurrencyChart>
     </ContentCard>
     <ContentCard Width="35rem">
         <em>Expense Trend</em>
         <LoadingOrbital 
-            Style="text-align: center;"
-            LoadingText="Wait For it..."
-            IsLoading="_loading">
+        Style="text-align: center;"
+        LoadingText="Wait For it..."
+        IsLoading="_loading">
         </LoadingOrbital>
         <CurrencyChart Id="expense-trend"
-                       Type="@ChartType.Line"
-                       xLabel="Year"
-                       yLabel="Value"
-                       @ref="_expense">
+        Type="@ChartType.Line"
+        xLabel="Year"
+        yLabel="Value"
+        @ref="_expense">
         </CurrencyChart>
     </ContentCard>
 </ContentRow>
@@ -153,8 +153,14 @@
 
         if (response.StatusCode == System.Net.HttpStatusCode.OK)
             ToastService.ShowToast(ToastLevel.Success, $"Asset market values have been updated.");
-        else if (response.StatusCode > System.Net.HttpStatusCode.MultipleChoices)
-            ToastService.ShowToast(ToastLevel.Error, $"Asset market values were not updated. Response Code: {response.StatusCode}");
+        else if (response.StatusCode > System.Net.HttpStatusCode.MultipleChoices){
+            string? message = await response.Content.ReadAsStringAsync();
+            if (message == null){
+                message = Convert.ToString(response.StatusCode);
+            }
+
+            ToastService.ShowToast(ToastLevel.Error, $"Asset market values were not updated. Response Code: {message}");
+        }
     }
 
     private void GetNetWorth()
