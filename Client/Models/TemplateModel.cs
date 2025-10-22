@@ -53,5 +53,7 @@ namespace BlazorFinance.Client.Models
         public string SharesLabel { get; set; } = String.Empty;
 
         public string PriceLabel { get; set; } = String.Empty;
+
+        public string BasisLabel {  get; set; } = String.Empty;
     }
 }
