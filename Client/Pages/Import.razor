@@ -212,6 +212,10 @@
                     <p>Name: @Model.Account.Name</p>
                     <p>Number: @Model.Account.Number</p>
                 </div>
+                <div class="mb-3">
+                    <p class="form-label mb-3 text-decoration-underline">Template</p>
+                    <p>Name: @Model.Template.Name</p>
+                </div>
                 <input type="submit" class="btn-client" value="Import" />
             </div>
         </EditForm>
@@ -220,8 +224,8 @@
 </ContentCard>
 
 @code {
-        [SupplyParameterFromForm]
-        protected ImportModel Model { get; set; } = new ImportModel();
+    [SupplyParameterFromForm]
+    protected ImportModel Model { get; set; } = new ImportModel();
 
     private int Columns = 0;
     private const int Steps = 7;
@@ -316,6 +320,7 @@
                 Model.Template.DescriptionLabel = template.DescriptionLabel;
                 Model.Template.SharesLabel = template.SharesLabel;
                 Model.Template.PriceLabel = template.PriceLabel;
+                Model.Template.BasisLabel = template.BasisLabel ?? "";
             }
         }
     }
@@ -395,10 +400,10 @@
             if (context.Model is ImportModel import){
                 IEnumerable<Models.AssetRow> header = import.AssetList.Where(x => x.Header == true);
 
-                if (header.Count() == 0)
+                if (header == null || header.Count() == 0)
                     messages.AppendLine("*A Header row has not been selected");
 
-                if (header.Count() > 1)
+                if (header?.Count() > 1)
                     messages.AppendLine("*More than one header row has been selected");
 
                 IEnumerable<Models.AssetRow> positions = import.AssetList.Where(x => x.Position == true);
