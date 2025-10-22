@@ -1,9 +1,8 @@
 ﻿using BlazorFinance.Client.Models;
-using BlazorFinance.Client.Pages;
 using BlazorFinance.Server.Repositories;
 using BlazorFinance.Shared.Entities;
+using Blazorise.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography.Xml;
 
 namespace BlazorFinance.Server.Controllers
 {
@@ -47,6 +46,7 @@ namespace BlazorFinance.Server.Controllers
             int ticker = header.IndexOf(model.Template.TickerLabel);
             int shares = header.IndexOf(model.Template.SharesLabel);
             int price = header.IndexOf(model.Template.PriceLabel);
+            int basis = header.IndexOf(model.Template.BasisLabel);
 
             // Select assets to be imported
             List<List<string>> positions = model.AssetList
@@ -96,7 +96,8 @@ namespace BlazorFinance.Server.Controllers
                     TickerLabel = model.Template.TickerLabel,
                     DescriptionLabel = model.Template.DescriptionLabel,
                     PriceLabel = model.Template.PriceLabel,
-                    SharesLabel = model.Template.SharesLabel
+                    SharesLabel = model.Template.SharesLabel,
+                    BasisLabel = model.Template.BasisLabel
                 };
 
                 var result = await _temRepository.CreateTemplateAsync(template);
@@ -104,6 +105,9 @@ namespace BlazorFinance.Server.Controllers
 
             foreach(var position in positions)
             {
+                decimal cost = position.ElementAtOrDefault(basis).IsNullOrEmpty() 
+                    ? 0m : Convert.ToDecimal(position[basis].Replace("$", String.Empty));
+
                 Asset asset = new Asset
                 {
                     AccountId = accountId,
@@ -111,7 +115,8 @@ namespace BlazorFinance.Server.Controllers
                     Symbol = position[ticker],
                     Description = position[description],
                     Quantity = Convert.ToDecimal(position[shares]),
-                    Price = Convert.ToDecimal(position[price].Replace("$", String.Empty))
+                    Price = Convert.ToDecimal(position[price].Replace("$", String.Empty)),
+                    CostBasis = cost,
                 };
 
                 List<Asset> assets = await _assRepository.ReadAssetListAsync(x => x.Symbol == asset.Symbol && x.AccountId == accountId);

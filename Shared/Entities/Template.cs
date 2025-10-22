@@ -20,6 +20,8 @@ namespace BlazorFinance.Shared.Entities
 
         public string PriceLabel { get; set; } = String.Empty;
 
+        public string BasisLabel { get; set; } = String.Empty;
+
 
     }
 }
