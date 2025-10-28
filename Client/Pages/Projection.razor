@@ -149,10 +149,10 @@
                     MarketValue = Assets.Where(x => x.SellDate >= today).Sum(y => y.MarketValue)
                 }
             )
-            .Where(x => x.Balance > 0 || x.MarketValue > 0)
+            //.Where(x => x.Balance > 0 || x.MarketValue > 0)
             .ToList();
 
-        // foreach(AccountBalance bal in balances){
+        // foreach(AccountBalance bal in accounts){
         //     Console.WriteLine($"Id: {bal.Id}, Name: {bal.Name}, Balance: {bal.Balance}, MarketValue: {bal.MarketValue}");
         // }
 
@@ -232,6 +232,15 @@
                 labels.Add((_model.CurrentAge + day.Year - today.Year).ToString());
 
                 foreach (var account in accounts){
+                    var sold = assets
+                        .Where(x => x.AccountId == account.Id && (x.SellDate >= day.AddYears(-1) && x.SellDate <= day))
+                        .Select(y => y.MarketValue)
+                        .DefaultIfEmpty(0)
+                        .First();
+
+                    if (sold > 0)
+                        account.Balance = account.Balance + sold;
+
                     var balance = accounts
                         .Where(x => x.Id == account.Id)
                         .Select(y => y.Balance)
