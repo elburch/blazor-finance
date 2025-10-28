@@ -71,7 +71,7 @@ Typical Account types are Savings, Checking, IRA, 401K, etc.
 * FK relationship to (parent) Institution
 
 ### Assets
-Assets are grouped based on liquidity.  Liquid assets (stocks, bonds, etc.) are held in an account, while illiquid assets are usually standalone (collectibles, real estate, etc.).  Both can appreciate on an annual basis.
+Assets are grouped based on liquidity.  Liquid assets (stocks, bonds, etc.) are held in an account, while illiquid assets (collectibles, real estate, etc.) are distributed to an account balance on the designated sell date.  Both can appreciate on an annual basis.
 
 * KF relationship to (parent) Account
 
