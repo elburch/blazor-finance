@@ -102,11 +102,13 @@
     {
         public int Id { get; set; }
 
+        public AccountType Type { get; set; }
+
         public string Name { get; set; } = String.Empty;
 
         public decimal Balance { get; set; }
 
-        public int AssetCount { get; set; }
+        // public int AssetCount { get; set; }
 
         public decimal MarketValue { get; set; }
     }
@@ -143,9 +145,10 @@
                 )
                 select new AccountBalance() { 
                     Id = Account.Id,
+                    Type = Account.Type,
                     Name = Account.Name,
                     Balance = Account.Balance, 
-                    AssetCount = Assets.Count(),
+                    // AssetCount = Assets.Count(),
                     MarketValue = Assets.Where(x => x.SellDate >= today).Sum(y => y.MarketValue)
                 }
             )
@@ -186,14 +189,10 @@
                 // if account id = expense account id, then subtract expense from balance or market value
                 var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    // if (account.Balance >= expense.Amount)
-                    //     account.Balance = (account.Balance - expense.Amount);
-                    // else if (account.MarketValue >= expense.Amount)
-                    //     account.MarketValue = (account.MarketValue - expense.Amount);
-                    if (account.AssetCount > 0)
-                        account.MarketValue = (account.MarketValue - expense.Amount);
-                    else
+                    if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                         account.Balance = (account.Balance - expense.Amount);
+                    else
+                        account.MarketValue = (account.MarketValue - expense.Amount);
                 }
             }
 
@@ -201,23 +200,21 @@
                 // if account id = income account id, then add income to balance or market value
                 var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    if (account.AssetCount > 0)
-                        account.MarketValue = (account.MarketValue + income.Amount);
-                    else
+                    if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                         account.Balance = (account.Balance + income.Amount);
+                    else
+                        account.MarketValue = (account.MarketValue + income.Amount);
                 }
             }
 
             foreach (var account in accounts){
-                if (account.AssetCount > 0)
-                    // Add daily portion of annual growth percentage to market value
-                    account.MarketValue += account.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
-                else
-                    // Add daily portion of annual growth percentage to account balance
-                    account.Balance += account.Balance * (decimal)((_model.AccountAppreciation / 100) / 365);
+                // Add daily portion of annual growth percentage to market value
+                account.MarketValue += account.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
+                // Add daily portion of annual growth percentage to account balance
+                account.Balance += account.Balance * (decimal)((_model.AccountAppreciation / 100) / 365);
             }
 
-            foreach (var asset in assets){
+            foreach (var asset in assets.Where(x => x.AccountId == 0)){
                 // Add daily portion of annual growth percentage to market value
                 asset.MarketValue += asset.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
             }
@@ -233,13 +230,16 @@
 
                 foreach (var account in accounts){
                     var sold = assets
-                        .Where(x => x.AccountId == account.Id && (x.SellDate >= day.AddYears(-1) && x.SellDate <= day))
+                        .Where(x => x.AccountId == account.Id && (x.SellDate > day.AddYears(-1) && x.SellDate <= day))
                         .Select(y => y.MarketValue)
                         .DefaultIfEmpty(0)
                         .First();
 
-                    if (sold > 0)
+                    if (sold > 0){
+                        // Adjustment is needed because balance and market value may appreciate at different rates (based on projection model)
                         account.Balance = account.Balance + sold;
+                        account.MarketValue = account.MarketValue - sold;
+                    }
 
                     var balance = accounts
                         .Where(x => x.Id == account.Id)
@@ -279,14 +279,10 @@
                     // if account id = expense account id, then subtract expense from balance or market value
                     var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        // if (account.Balance >= expense.Amount)
-                        //     account.Balance = (account.Balance - expense.Amount);
-                        // else// if (account.MarketValue >= expense.Amount)
-                        //     account.MarketValue = (account.MarketValue - expense.Amount);
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue - expense.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance - expense.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue - expense.Amount);
                     }
                 }
 
@@ -294,10 +290,10 @@
                     // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue + income.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance + income.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue + income.Amount);
                     }
                 }
             }
@@ -307,14 +303,10 @@
                     // if account id = expense account id, then subtract expense from balance or market value
                     var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        // if (account.Balance >= expense.Amount)
-                        //     account.Balance = (account.Balance - expense.Amount);
-                        // else if (account.MarketValue >= expense.Amount)
-                        //     account.MarketValue = (account.MarketValue - expense.Amount);
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue - expense.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance - expense.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue - expense.Amount);
                     }
                 }
 
@@ -322,10 +314,10 @@
                     // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue + income.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance + income.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue + income.Amount);
                     }
                 }
             }
@@ -335,14 +327,10 @@
                     // if account id = expense account id, then subtract expense from balance or market value
                     var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        // if (account.Balance >= expense.Amount)
-                        //     account.Balance = (account.Balance - expense.Amount);
-                        // else if (account.MarketValue >= expense.Amount)
-                        //     account.MarketValue = (account.MarketValue - expense.Amount);
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue - expense.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance - expense.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue - expense.Amount);
                     }
                 }
 
@@ -350,10 +338,10 @@
                     // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue + income.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance + income.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue + income.Amount);
                     }
                 }
             }
@@ -363,14 +351,10 @@
                     // if account id = expense account id, then subtract expense from balance or market value
                     var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        // if (account.Balance >= expense.Amount)
-                        //     account.Balance = (account.Balance - expense.Amount);
-                        // else if (account.MarketValue >= expense.Amount)
-                        //     account.MarketValue = (account.MarketValue - expense.Amount);
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue - expense.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance - expense.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue - expense.Amount);
                     }
                 }
 
@@ -378,10 +362,10 @@
                     // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue + income.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance + income.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue + income.Amount);
                     }
                 }
             }
@@ -391,14 +375,10 @@
                     // if account id = expense account id, then subtract expense from balance or market value
                     var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        // if (account.Balance >= expense.Amount)
-                        //     account.Balance = (account.Balance - expense.Amount);
-                        // else if (account.MarketValue >= expense.Amount)
-                        //     account.MarketValue = (account.MarketValue - expense.Amount);
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue - expense.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance - expense.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue - expense.Amount);
                     }
                 }
 
@@ -406,10 +386,10 @@
                     // if account id = income account id, then add income to balance or market value
                     var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                     if (account != null){
-                        if (account.AssetCount > 0)
-                            account.MarketValue = (account.MarketValue + income.Amount);
-                        else
+                        if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                             account.Balance = (account.Balance + income.Amount);
+                        else
+                            account.MarketValue = (account.MarketValue + income.Amount);
                     }
                 }
             }         
@@ -418,14 +398,10 @@
                 // if account id = expense account id, then subtract expense from balance or market value
                 var account = accounts.Where(x => x.Id == expense.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    // if (account.Balance >= expense.Amount)
-                    //     account.Balance = (account.Balance - expense.Amount);
-                    // else if (account.MarketValue >= expense.Amount)
-                    //     account.MarketValue = (account.MarketValue - expense.Amount);
-                    if (account.AssetCount > 0)
-                        account.MarketValue = (account.MarketValue - expense.Amount);
-                    else
+                    if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                         account.Balance = (account.Balance - expense.Amount);
+                    else
+                        account.MarketValue = (account.MarketValue - expense.Amount);
                 }
             }
 
@@ -433,10 +409,10 @@
                 // if account id = income account id, then add income to balance or market value
                 var account = accounts.Where(x => x.Id == income.Account?.Id).FirstOrDefault();
                 if (account != null){
-                    if (account.AssetCount > 0)
-                        account.MarketValue = (account.MarketValue + income.Amount);
-                    else
+                    if (account.Type == AccountType.Cash || account.Type == AccountType.Checking || account.Type == AccountType.Savings)
                         account.Balance = (account.Balance + income.Amount);
+                    else
+                        account.MarketValue = (account.MarketValue + income.Amount);
                 }
             }
         }
