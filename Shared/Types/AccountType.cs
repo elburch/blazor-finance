@@ -39,4 +39,12 @@ namespace BlazorFinance.Shared.Types
         [Display(Name = "Mortgage")]
         Mortgage
     }
+
+    public static class AccountTypes
+    {
+        public static bool isCash(this AccountType account)
+        {
+            return account <= AccountType.Checking;
+        }
+    }
 }

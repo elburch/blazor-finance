@@ -76,31 +76,53 @@ Assets are grouped based on liquidity.  Liquid assets (stocks, bonds, etc.) are 
 * KF relationship to (parent) Account
 
 ### Income
-Income received directly from an Institution (wages, pension, socal security, etc.).  Note that for the purposes of our projections, income received fom asset (interest, dividends, etc.) will be lumped in with annual growth and "re-invested" (increasing the value of the Asset).
+Income received directly from an Institution (wages, pension, socal security, etc.).  Note that for the purposes of our projections, income received from an asset (interest, dividends, etc.) will be lumped in with annual growth and "re-invested" (increasing the value of the Asset).
 
 * FK relationship to Institution (that Income was received from)
 * FK relationship to Account (that Income will be deposited to)
 * FK relationship to Asset (that Income will be invested in)
 
-NOTE: Income will be "deposited" using the following methods (in order of priority):
+**Summary Page**
+
+NOTE: Expenses will be "deposited" using the following methods:
 
 * 100% "deposit" to any single Asset associated with the Income record
-* If a single Asset is not defined, the Income will be "deposited" equally among all Assets associated with the Income parent Account
-* If there are no Assets associated with the Income parent Account, the Income will be "deposited" to the parent Account
+* For Cash, Savings, and Checking Account Types, the Income will be "deposited" to the Account Balance
+* For all other Account Types, the Income will be "deposited" to all Assets associated with the Income parent Account
+
+**Projection Page**
+
+NOTE: Expenses will be "deposited" using the following methods:
+
+Cash, Savings, and Checking Account Types
+* 100% "deposit" to Account balance
+All other Account Types
+* 100% "deposit" to aggregate Asset market value (sum of all Assets)
 
 ### Expenses
-Expenses can be "paid for" by an Account "withdrawal" or "selling" a portion of an Asset.
+Expenses can be "paid for" by an Account "withdrawal" or "selling" a portion of a "liquid" Asset (real estate and collectibles are considered "illiquid").
 
-TIP: Use "Debt" for big ticket purchases, such as Homes, Cars, etc.  This will ensure an accurate calculation of net worth (total assets - liabilities)
+TIP: Use "Debt" to define big ticket purchases, such as Homes, Cars, etc.  This will ensure an accurate calculation of net worth (total assets - liabilities)
 
 * FK relationship to Account (that Expenses are "withdrawn" from)
-* FK relationship to Asset (that are sold to "pay" for Expenses)
+* FK relationship to Assets associated with the Account (that are sold to "pay" for Expenses)
 
-NOTE: Expenses will be "withdrawn" using the following methods (in order of priority):
+**Summary Page**
 
-* 100% "withdrawal" from any single Asset associated with the Expense record that has a Market Value >= Expense
-* If a single Asset is not defined, the Expense will be "withdrawn" from the Account Balance if the Balance >= Expense
-* If neither of the first two conditions are met, the Expense will be "withdrawn" equally from all Assets associated with the Expense parent Account
+NOTE: Expenses will be "withdrawn" using the following methods:
+
+* 100% "withdrawal" from any single Asset associated with the Expense record
+* For Cash, Savings, and Checking Account Types, the Expense will be "withdrawn" from the Account Balance
+* For all other Account Types, the Expense will be "withdrawn" equally from all Assets associated with the Expense parent Account
+
+**Projection Page**
+
+NOTE: Expenses will be "withdrawn" using the following methods:
+
+Cash, Savings, and Checking Account Types
+* 100% "withdrawl" from Account balance
+All other Account Types
+* 100% "withdrawl" from aggregate Asset market value (sum of all Assets)
 
 ### Templates
 Templates are used to identify the ordinal position of columns in brokerage portfolio import files (.csv format).  
