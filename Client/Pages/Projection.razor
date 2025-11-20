@@ -98,21 +98,6 @@
 
     private CurrencyChart _chart = new CurrencyChart();
 
-    private class AccountBalance
-    {
-        public int Id { get; set; }
-
-        public AccountType Type { get; set; }
-
-        public string Name { get; set; } = String.Empty;
-
-        public decimal Balance { get; set; }
-
-        // public int AssetCount { get; set; }
-
-        public decimal MarketValue { get; set; }
-    }
-
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
@@ -134,7 +119,7 @@
     {
         DateOnly today = DateOnly.FromDateTime(DateTime.Now);
 
-        List<AccountBalance> accounts =
+        List<AccountModel> accounts =
             (
                 from Account in _accounts
                 let Assets =
@@ -143,12 +128,11 @@
                     where Asset.AccountId == Account.Id
                     select Asset
                 )
-                select new AccountBalance() { 
+                select new AccountModel() { 
                     Id = Account.Id,
                     Type = Account.Type,
                     Name = Account.Name,
                     Balance = Account.Balance, 
-                    // AssetCount = Assets.Count(),
                     MarketValue = Assets.Where(x => x.SellDate >= today).Sum(y => y.MarketValue)
                 }
             )
