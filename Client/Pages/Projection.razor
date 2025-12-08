@@ -203,6 +203,12 @@
                 asset.MarketValue += asset.MarketValue * (decimal)((_model.AssetAppreciation / 100) / 365);
             }
 
+            foreach (var income in incomes.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.InflationAdjusted == true)){
+                // Add daily portion of inflation percentage to income amount
+                income.Amount += income.Amount * (decimal)((_model.AnnualInflation / 100) / 365);
+                // Console.WriteLine($"Day: {day}  Income Name: {income.Description} Income Amount: {income.Amount}");
+            }
+
             foreach (var expense in expenses.Where(x => x.StartingDate <= day && day <= x.EndingDate && x.InflationSensitive == true)){
                 // Add daily portion of inflation percentage to expense amount
                 expense.Amount += expense.Amount * (decimal)((_model.AnnualInflation / 100) / 365);
