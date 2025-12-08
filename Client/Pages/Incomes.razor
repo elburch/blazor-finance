@@ -11,15 +11,15 @@
 <ContentCard>
     <h3>Income</h3>
     <DataGrid TItem="Income"
-              Data="@_income"
-              RowInserted="@OnRowInserted"
-              RowUpdated="@OnRowUpdated"
-              RowRemoving="@OnRowRemoving"
-              RowRemoved="@OnRowRemoved"
-              Editable="true"
-              ShowPager="true"
-              Style="color: white;"
-              Responsive>
+    Data="@_income"
+    RowInserted="@OnRowInserted"
+    RowUpdated="@OnRowUpdated"
+    RowRemoving="@OnRowRemoving"
+    RowRemoved="@OnRowRemoved"
+    Editable="true"
+    ShowPager="true"
+    Style="color: white;"
+    Responsive>
         <DataGridColumns>
             <DataGridCommandColumn>
                 <NewCommandTemplate>
@@ -28,7 +28,7 @@
                     </button>
                 </NewCommandTemplate>
                 <EditCommandTemplate>
-                    <button type="button" class="btn-admin" title="Edit" onclick="@context.Clicked">
+                    <button type="button" class="btn-admin" title="Edit" @onclick="() => OnEditClicked(context)">
                         <i class="oi bi-pencil" style="font-size: 1.2rem;"></i>
                     </button>
                 </EditCommandTemplate>
@@ -40,31 +40,28 @@
             </DataGridCommandColumn>
             <DataGridColumn Field="@nameof(Income.Id)" Caption="#" Sortable="false" />
             <DataGridSelectColumn Field="@nameof(Income.Type)"
-                                  Caption="Type"
-                                  Data="Enum.GetValues(typeof(IncomeType)).Cast<object>()"
-                                  ValueField="(x) => (IncomeType)x"
-                                  TextField="(x) => Enum.GetName(typeof(IncomeType), (IncomeType)x)"
-                                  Editable="true">
+            Caption="Type"
+            Data="Enum.GetValues(typeof(IncomeType)).Cast<object>()"
+            ValueField="(x) => (IncomeType)x"
+            TextField="(x) => Enum.GetName(typeof(IncomeType), (IncomeType)x)"
+            Editable="true">
             </DataGridSelectColumn>
+            <DataGridColumn Field="@nameof(Income.InflationAdjusted)" Caption="Inflation Adjusted" Editable />
             <DataGridSelectColumn Field="@nameof(Income.Institution)"
-                                  Caption="Received From Institution"
-                                  Editable="true">
+            Caption="Received From Institution"
+            Editable="true">
                 <DisplayTemplate>
-                    @if (_institutions != null)
-                    {
-                        @_institutions.FirstOrDefault(x => x.Id == (context as Income).Institution?.Id)?.Name
-                        ;
+                    @if (_institutions != null){
+                        @_institutions.FirstOrDefault(x => x.Id == (context as Income).Institution?.Id)?.Name;
                     }
                 </DisplayTemplate>
                 <EditTemplate>
                     <Select TValue="int"
-                            SelectedValue="@((int)((Institution)context.CellValue).Id)"
-                            SelectedValueChanged="@( v => context.CellValue = _institutions.FirstOrDefault(x => x.Id == v))">
+                    SelectedValue="@((int)((Institution)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = _institutions.FirstOrDefault(x => x.Id == v))">
                         <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                        @if (_institutions != null)
-                        {
-                            foreach (var institution in _institutions)
-                            {
+                        @if (_institutions != null){
+                            foreach (var institution in _institutions){
                                 <SelectItem TValue="int" Value="@(institution.Id)">@(institution.Name)</SelectItem>
                             }
                         }
@@ -72,24 +69,20 @@
                 </EditTemplate>
             </DataGridSelectColumn>
             <DataGridSelectColumn Field="@nameof(Income.Account)"
-                                  Caption="Deposit To Account"
-                                  Editable="true">
+            Caption="Deposit To Account"
+            Editable="true">
                 <DisplayTemplate>
-                    @if (_accounts != null)
-                    {
-                        @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name
-                        ;
+                    @if (_accounts != null){
+                        @_accounts.FirstOrDefault(x => x.Id == (context as Income).Account?.Id)?.Name;
                     }
                 </DisplayTemplate>
                 <EditTemplate>
                     <Select TValue="int"
-                            SelectedValue="@((int)((Account)context.CellValue).Id)"
-                            SelectedValueChanged="@( v => context.CellValue = _accounts.FirstOrDefault(x => x.Id == v))">
+                    SelectedValue="@((int)((Account)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = OnAccountChanged(v))">
                         <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                        @if (_accounts != null)
-                        {
-                            foreach (var account in _accounts)
-                            {
+                        @if (_accounts != null){
+                            foreach (var account in _accounts){
                                 <SelectItem TValue="int" Value="@(account.Id)">@(account.Name)</SelectItem>
                             }
                         }
@@ -97,24 +90,20 @@
                 </EditTemplate>
             </DataGridSelectColumn>
             <DataGridSelectColumn Field="@nameof(Income.Asset)"
-                                  Caption="Invest In Asset"
-                                  Editable="true">
+            Caption="Invest In Asset"
+            Editable="true">
                 <DisplayTemplate>
-                    @if (_assets != null)
-                    {
-                        @_assets.FirstOrDefault(x => x.Id == (context as Income).Asset?.Id)?.Description
-                        ;
+                    @if (_filtered != null){
+                        @_filtered.FirstOrDefault(x => x.Id == (context as Income).Asset?.Id)?.Description;
                     }
                 </DisplayTemplate>
                 <EditTemplate>
                     <Select TValue="int"
-                            SelectedValue="@((int)((Asset)context.CellValue).Id)"
-                            SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
+                    SelectedValue="@((int)((Asset)context.CellValue).Id)"
+                    SelectedValueChanged="@( v => context.CellValue = _assets.FirstOrDefault(x => x.Id == v))">
                         <SelectItem TValue="int" Value="0">&ltNone&gt</SelectItem>
-                        @if (_assets != null)
-                        {
-                            foreach (var asset in _assets)
-                            {
+                        @if (_filtered != null){
+                            foreach (var asset in _filtered){
                                 <SelectItem TValue="int" Value="@(asset.Id)">@(asset.Description)</SelectItem>
                             }
                         }
@@ -122,37 +111,39 @@
                 </EditTemplate>
             </DataGridSelectColumn>
             <DataGridColumn Field="@nameof(Income.Description)" Caption="Description" Editable />
-             <DataGridColumn Field="@nameof(Income.Amount)"
-                             Caption="Amount"
-                             DisplayFormat="{0:C}"
-                             DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
-                                    Editable>
+            <DataGridColumn Field="@nameof(Income.Amount)"
+            Caption="Amount"
+            DisplayFormat="{0:C}"
+            DisplayFormatProvider="@System.Globalization.CultureInfo.GetCultureInfo("en-US")"
+            Editable>
                 <EditTemplate>
                     <NumericEdit TValue="decimal"
-                                 Value="@((decimal)context.CellValue)"
-                                 ValueChanged="@( v => context.CellValue = v)" />
+                    Value="@((decimal)context.CellValue)"
+                    ValueChanged="@( v => context.CellValue = v)" />
                 </EditTemplate>
             </DataGridColumn>
             <DataGridSelectColumn Field="@nameof(Income.Frequency)"
-                                  Caption="Frequency"
-                                  Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
-                                  ValueField="(x) => (Frequency)x"
-                                  TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
-                                  Editable="true">
+            Caption="Frequency"
+            Data="Enum.GetValues(typeof(Frequency)).Cast<object>()"
+            ValueField="(x) => (Frequency)x"
+            TextField="(x) => Enum.GetName(typeof(Frequency), (Frequency)x)"
+            Editable="true">
             </DataGridSelectColumn>
             <DataGridColumn Field="@nameof(Income.StartingDate)" Caption="Starting Date" Editable />
-             <DataGridColumn Field="@nameof(Income.EndingDate)" Caption="Ending Date" Editable />
-         </DataGridColumns>
-     </DataGrid>
+            <DataGridColumn Field="@nameof(Income.EndingDate)" Caption="Ending Date" Editable />
+        </DataGridColumns>
+    </DataGrid>
 </ContentCard>
 
- @code {
+@code {
     // Primary Entity
     private List<Income> _income = new List<Income>();
     // Related Entitites
     private List<Account> _accounts = new List<Account>();
     private List<Asset> _assets = new List<Asset>();
     private List<Institution> _institutions = new List<Institution>();
+    // Filtered Entities
+    private List<Asset> _filtered = new List<Asset>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,6 +153,54 @@
         _accounts = await Http.GetFromJsonAsync<List<Account>>("account/read") ?? new List<Account>();
         _assets = await Http.GetFromJsonAsync<List<Asset>>("asset/read") ?? new List<Asset>();
         _institutions = await Http.GetFromJsonAsync<List<Institution>>("institution/read") ?? new List<Institution>();
+        // Filtered Entities
+        _filtered = _assets;
+    }
+
+    private Account OnAccountChanged(int id)
+    {
+        //Console.WriteLine($"Account Changed: {id.ToString()}");
+
+        Account account = _accounts
+            .DefaultIfEmpty(new Account())
+            .First(x => x.Id == id);
+
+        //Console.WriteLine($"Pre _filtered count: {_filtered.Count}");
+
+        _filtered = _assets
+            .Where(x => x.Type.isLiquid() && x.AccountId == account.Id)
+            .ToList();
+
+        //Console.WriteLine($"Post _filtered count: {_filtered.Count}");
+
+        return account;
+    }
+
+    /// <summary>
+    /// NOTE: Our version of Blazorise does not appear to provide access to the DataGrid RowEditing event.
+    /// That limitation forces us to overload the Edit button EventCallback to populate Account Assets.
+    /// </summary>
+    /// <param name="context"></param>
+    private void OnEditClicked(EditCommandContext<Income> context)
+    {
+        //Console.WriteLine($"OnEditClicked --> Editing row with Account ID: {context.Item.Account?.Id}");
+
+        // Get Assets associated with the Expense Account Id
+        _filtered = _assets
+            .Where(x => x.Type.isLiquid() && x.AccountId == context.Item.Account?.Id)
+            .ToList();
+
+        //Console.WriteLine($"OnEditClicked --> _filtered.Count: {_filtered.Count}, context.Item.Asset.Id: {context.Item.Asset?.Id}");
+
+        if (_filtered.Count == 0 && context.Item.Asset != null)
+            context.Item.Asset.Id = 0;
+
+        //Console.WriteLine($"OnEditClicked --> _filtered.Count: {_filtered.Count}, context.Item.Asset.Id: {context.Item.Asset?.Id}");
+
+        // Invoke the context EventCallback
+        EventCallback callback = context.Clicked;
+        if (callback.HasDelegate)
+            callback.InvokeAsync();
     }
 
     private async Task OnRowInserted(SavedRowItem<Income, Dictionary<string, object>> e)
