@@ -35,6 +35,8 @@ namespace BlazorFinance.Shared.Entities
 
         public IncomeType Type { get; set; }
 
+        public bool InflationAdjusted { get; set; }
+
         public string Description { get; set; } = string.Empty;
 
         public decimal Amount { get; set; }
