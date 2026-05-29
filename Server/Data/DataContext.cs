@@ -47,6 +47,24 @@ namespace BlazorFinance.Server.Data
             //}
         }
 
+        /// <summary>
+        /// Default constructor (uses the database path configured in the static constructor)
+        /// </summary>
+        public DataContext(){}
+
+        /// <summary>
+        /// Constructor allowing a custom database path to be specified
+        /// </summary>
+        /// <param 
+        /// name="dbPath">Optional custom database path
+        /// </param>
+        public DataContext(string? dbPath = null)
+        {
+            if (!string.IsNullOrEmpty(dbPath)){
+                _dbpath = dbPath;
+            }
+        }
+
         public async Task<BsonValue> Create(TEntity entity)
         {
             try
@@ -123,7 +141,7 @@ namespace BlazorFinance.Server.Data
                         .Query()
                     );
 
-                    entities = query.Include(expression).ToList();
+                    entities = query.Where(expression).ToList();
                 }
             }
             catch (Exception ex)
